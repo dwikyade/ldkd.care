@@ -6,6 +6,7 @@ import { Button } from '@/Components/ui/Button';
 import { AlertTriangle, ArrowLeft, CameraOff, QrCode, Search, X } from 'lucide-react';
 import type { FormEvent } from 'react';
 import { useEffect, useRef, useState } from 'react';
+import ParticipantStepper from '@/Components/ldkd/ParticipantStepper';
 
 type Language = 'id' | 'en';
 
@@ -156,6 +157,7 @@ export default function Identify({ mode, role, language = 'id', activity }: Prop
             <Head title={t.title} />
 
             <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col pt-4">
+                <ParticipantStepper current={2} />
                 <Link href={route('participant.select-role', { mode, lang: language })} className="mb-8 inline-flex items-center text-sm text-slate-500 transition-colors hover:text-indigo-600">
                     <ArrowLeft className="mr-2 h-4 w-4" />
                     {t.back}
@@ -216,7 +218,7 @@ export default function Identify({ mode, role, language = 'id', activity }: Prop
                                             value={data.participant_code}
                                             onChange={(e) => setData('participant_code', e.target.value.toUpperCase())}
                                             placeholder={t.placeholder}
-                                            className={`block w-full rounded-xl border py-3 pl-10 pr-3 uppercase shadow-sm placeholder:normal-case focus:outline-none focus:ring-2 sm:text-lg ${
+                                            className={`block w-full rounded-xl border py-3 pl-10 pr-3 font-mono uppercase tracking-wide shadow-sm placeholder:font-sans placeholder:normal-case placeholder:tracking-normal focus:outline-none focus:ring-2 sm:text-lg ${
                                                 errors.participant_code
                                                     ? 'border-rose-300 focus:ring-rose-500'
                                                     : 'border-slate-300 bg-white focus:ring-indigo-500'

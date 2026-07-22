@@ -10,9 +10,13 @@ import {
     LogOut, 
     Menu,
     X,
-    Shield
+    ShieldCheck,
+    BarChart3,
+    Download,
+    ClipboardList,
+    Scale,
+    History
 } from 'lucide-react';
-import { Button } from '@/Components/ui/Button';
 
 interface Props {
     children: React.ReactNode;
@@ -25,10 +29,14 @@ export default function AdminLayout({ children }: Props) {
     const navItems = [
         { name: 'Dashboard', href: route('admin.dashboard'), icon: LayoutDashboard },
         { name: 'Kegiatan', href: route('admin.activities.index'), icon: CalendarDays },
-        { name: 'Sekolah', href: route('admin.schools.index'), icon: School },
+        { name: 'Sekolah dan Kelas', href: route('admin.schools.index'), icon: School },
         { name: 'Peserta', href: '#', icon: Users },
-        { name: 'Soal Kuesioner', href: route('admin.questions.index'), icon: FileQuestion },
-        { name: 'Kategori & Tips', href: '#', icon: Tags },
+        { name: 'Soal', href: route('admin.questions.index'), icon: FileQuestion },
+        { name: 'Bobot dan Kategori', href: '#', icon: Scale },
+        { name: 'Hasil', href: '#', icon: ClipboardList },
+        { name: 'Perbandingan', href: '#', icon: BarChart3 },
+        { name: 'Export', href: '#', icon: Download },
+        { name: 'Audit Log', href: '#', icon: History },
     ];
 
     const handleLogout = () => {
@@ -36,40 +44,40 @@ export default function AdminLayout({ children }: Props) {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex">
+        <div className="flex min-h-screen bg-[#F8FAFC] text-[#172033]">
             
             {/* Mobile Sidebar Overlay */}
             {sidebarOpen && (
                 <div 
-                    className="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-sm lg:hidden"
+                    className="fixed inset-0 z-40 bg-[#172033]/30 backdrop-blur-sm lg:hidden"
                     onClick={() => setSidebarOpen(false)}
                 />
             )}
 
             {/* Sidebar */}
             <aside className={`
-                fixed top-0 left-0 z-50 h-screen w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800
+                fixed top-0 left-0 z-50 h-screen w-72 border-r border-[#E8ECF3] bg-white
                 transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:shrink-0
                 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
             `}>
-                <div className="h-16 flex items-center px-6 border-b border-slate-200 dark:border-slate-800">
+                <div className="flex h-16 items-center px-6">
                     <Link href="/admin/dashboard" className="flex items-center gap-2 group">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-cyan-500 flex items-center justify-center text-white shadow-md">
-                            <Shield className="w-5 h-5" />
+                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#5B5FEF] text-white shadow-sm">
+                            <ShieldCheck className="h-5 w-5" />
                         </div>
-                        <span className="font-heading font-bold text-lg text-slate-800 dark:text-white">
-                            LDKD <span className="text-indigo-600 dark:text-indigo-400">Admin</span>
+                        <span className="font-heading text-lg font-bold text-[#172033]">
+                            LDKD <span className="text-[#5B5FEF]">Admin</span>
                         </span>
                     </Link>
                     <button 
-                        className="ml-auto lg:hidden text-slate-500 hover:text-slate-900 dark:hover:text-white"
+                        className="ml-auto text-[#667085] hover:text-[#172033] lg:hidden"
                         onClick={() => setSidebarOpen(false)}
                     >
                         <X className="w-5 h-5" />
                     </button>
                 </div>
 
-                <nav className="p-4 space-y-1">
+                <nav className="space-y-1 px-4 py-3">
                     {navItems.map((item) => {
                         const Icon = item.icon;
                         const isActive = item.href !== '#' && url.startsWith(new URL(item.href, 'http://localhost').pathname);
@@ -78,23 +86,23 @@ export default function AdminLayout({ children }: Props) {
                             <Link
                                 key={item.name}
                                 href={item.href}
-                                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-colors ${
+                                className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors ${
                                     isActive 
-                                    ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300' 
-                                    : 'text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200'
+                                    ? 'bg-[#F1F3FF] text-[#5B5FEF]' 
+                                    : 'text-[#667085] hover:bg-[#F8FAFC] hover:text-[#172033]'
                                 }`}
                             >
-                                <Icon className={`w-5 h-5 ${isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-500'}`} />
+                                <Icon className={`h-5 w-5 ${isActive ? 'text-[#5B5FEF]' : 'text-[#98A2B3]'}`} />
                                 {item.name}
                             </Link>
                         )
                     })}
                 </nav>
 
-                <div className="absolute bottom-0 w-full p-4 border-t border-slate-200 dark:border-slate-800">
+                <div className="absolute bottom-0 w-full border-t border-[#E8ECF3] p-4">
                     <button 
                         onClick={handleLogout}
-                        className="flex items-center gap-3 px-3 py-2.5 w-full rounded-lg font-medium text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/30 transition-colors"
+                        className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 font-semibold text-[#F43F5E] transition-colors hover:bg-rose-50"
                     >
                         <LogOut className="w-5 h-5 text-rose-500" />
                         Keluar
@@ -103,21 +111,21 @@ export default function AdminLayout({ children }: Props) {
             </aside>
 
             {/* Main Content */}
-            <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+            <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
                 {/* Topbar */}
-                <header className="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 lg:px-8">
+                <header className="flex h-16 items-center justify-between border-b border-[#E8ECF3] bg-white px-4 lg:px-8">
                     <button 
-                        className="lg:hidden text-slate-500 hover:text-slate-900 dark:hover:text-white"
+                        className="text-[#667085] hover:text-[#172033] lg:hidden"
                         onClick={() => setSidebarOpen(true)}
                     >
                         <Menu className="w-6 h-6" />
                     </button>
                     
                     <div className="ml-auto flex items-center gap-4">
-                        <div className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                        <div className="text-sm font-semibold text-[#667085]">
                             Administrator
                         </div>
-                        <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center text-indigo-700 dark:text-indigo-300 font-bold border border-indigo-200 dark:border-indigo-700">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-full border border-[#D9DDFF] bg-[#F1F3FF] font-bold text-[#5B5FEF]">
                             A
                         </div>
                     </div>

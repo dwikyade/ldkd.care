@@ -4,6 +4,7 @@ import ParticipantLayout from '@/Layouts/ParticipantLayout';
 import { Card, CardContent } from '@/Components/ui/Card';
 import { Button } from '@/Components/ui/Button';
 import { ArrowRight, RefreshCcw, UserCheck } from 'lucide-react';
+import ParticipantStepper from '@/Components/ldkd/ParticipantStepper';
 
 type Language = 'id' | 'en';
 
@@ -64,6 +65,7 @@ export default function ConfirmIdentity({ participant, test_type, language = 'id
     return (
         <ParticipantLayout>
             <Head title={language === 'id' ? 'Konfirmasi Identitas' : 'Confirm Identity'} />
+            <ParticipantStepper current={2} />
 
             <motion.div
                 initial={{ opacity: 0, y: reduceMotion ? 0 : 18 }}

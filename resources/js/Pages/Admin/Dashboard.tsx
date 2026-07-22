@@ -65,11 +65,11 @@ export default function Dashboard({ stats, chartData, recentActivities }: Props)
 
             <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                 <div>
-                    <h1 className="font-heading text-2xl font-bold text-slate-900 dark:text-white">Dashboard</h1>
-                    <p className="text-slate-500 dark:text-slate-400">Rekap evaluasi LDKD Care dari data peserta dan submission.</p>
+                    <h1 className="font-heading text-3xl font-bold tracking-[-0.01em] text-[#172033]">Dashboard</h1>
+                    <p className="mt-1 text-[#667085]">Rekap evaluasi LDKD Care dari data peserta dan submission.</p>
                 </div>
-                <div className="inline-flex w-fit items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
-                    <Activity className="h-4 w-4 text-indigo-600" />
+                <div className="inline-flex w-fit items-center gap-2 rounded-xl border border-[#E8ECF3] bg-white px-4 py-2 text-sm font-semibold text-[#667085] shadow-sm">
+                    <Activity className="h-4 w-4 text-[#5B5FEF]" />
                     {stats.active_activities} kegiatan aktif
                 </div>
             </div>
@@ -88,8 +88,8 @@ export default function Dashboard({ stats, chartData, recentActivities }: Props)
                             <Card className={`border-l-4 ${toneBorder(item.tone)}`}>
                                 <CardContent className="flex items-center justify-between p-6">
                                     <div>
-                                        <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{item.label}</p>
-                                        <h3 className="mt-1 font-heading text-3xl font-bold text-slate-900 dark:text-white">{item.value}</h3>
+                                        <p className="text-sm font-medium text-[#667085]">{item.label}</p>
+                                        <h3 className="mt-1 font-heading text-3xl font-bold text-[#172033]">{item.value}</h3>
                                     </div>
                                     <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${toneIcon(item.tone)}`}>
                                         <Icon className="h-6 w-6" />
@@ -105,7 +105,7 @@ export default function Dashboard({ stats, chartData, recentActivities }: Props)
                 <Card className="lg:col-span-2">
                     <CardHeader>
                         <div className="flex items-center gap-2">
-                            <BarChart3 className="h-5 w-5 text-indigo-600" />
+                            <BarChart3 className="h-5 w-5 text-[#5B5FEF]" />
                             <CardTitle>Perbandingan Rata-rata Pre-Test vs Post-Test</CardTitle>
                         </div>
                     </CardHeader>
@@ -113,16 +113,16 @@ export default function Dashboard({ stats, chartData, recentActivities }: Props)
                         <div className="h-[320px] w-full">
                             <ResponsiveContainer width="100%" height="100%">
                                 <BarChart data={chartData}>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E8ECF3" />
                                     <XAxis dataKey="name" axisLine={false} tickLine={false} />
                                     <YAxis axisLine={false} tickLine={false} domain={[0, 100]} />
                                     <Tooltip
                                         formatter={(value: number) => [`${value}%`, '']}
-                                        contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 12px 24px -16px rgb(15 23 42 / 0.35)' }}
+                                        contentStyle={{ borderRadius: '14px', border: '1px solid #E8ECF3', boxShadow: '0 20px 44px -32px rgb(23 32 51 / 0.45)' }}
                                     />
                                     <Legend />
-                                    <Bar dataKey="literasi" name="Literasi Digital" fill="#4f46e5" radius={[6, 6, 0, 0]} isAnimationActive={!reduceMotion} />
-                                    <Bar dataKey="keamanan" name="Keamanan Digital" fill="#06b6d4" radius={[6, 6, 0, 0]} isAnimationActive={!reduceMotion} />
+                                    <Bar dataKey="literasi" name="Literasi Digital" fill="#5B5FEF" radius={[8, 8, 0, 0]} isAnimationActive={!reduceMotion} />
+                                    <Bar dataKey="keamanan" name="Keamanan Digital" fill="#38BDF8" radius={[8, 8, 0, 0]} isAnimationActive={!reduceMotion} />
                                 </BarChart>
                             </ResponsiveContainer>
                         </div>
@@ -136,7 +136,7 @@ export default function Dashboard({ stats, chartData, recentActivities }: Props)
                     <CardContent>
                         <div className="space-y-5">
                             {recentActivities.length === 0 && (
-                                <p className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-900/70 dark:text-slate-400">
+                                    <p className="rounded-xl border border-[#E8ECF3] bg-[#F8FAFC] p-4 text-sm text-[#667085]">
                                     Belum ada submission terbaru.
                                 </p>
                             )}
@@ -145,10 +145,10 @@ export default function Dashboard({ stats, chartData, recentActivities }: Props)
                                 <div key={item.id} className="flex gap-4">
                                     <div className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${item.test_type === 'pre_test' ? 'bg-indigo-500' : 'bg-cyan-500'}`} />
                                     <div>
-                                        <p className="text-sm font-semibold leading-6 text-slate-900 dark:text-white">
+                                        <p className="text-sm font-semibold leading-6 text-[#172033]">
                                             {item.participant} menyelesaikan {item.test_type === 'pre_test' ? 'Pre-Test' : 'Post-Test'}
                                         </p>
-                                        <p className="text-xs text-slate-500 dark:text-slate-400">{item.submitted_at}</p>
+                                        <p className="text-xs text-[#667085]">{item.submitted_at}</p>
                                     </div>
                                 </div>
                             ))}
@@ -162,11 +162,11 @@ export default function Dashboard({ stats, chartData, recentActivities }: Props)
 
 function toneBorder(tone: string) {
     const map: Record<string, string> = {
-        indigo: 'border-l-indigo-500',
-        cyan: 'border-l-cyan-500',
-        emerald: 'border-l-emerald-500',
-        amber: 'border-l-amber-500',
-        slate: 'border-l-slate-500',
+        indigo: 'border-l-[#5B5FEF]',
+        cyan: 'border-l-[#38BDF8]',
+        emerald: 'border-l-[#10B981]',
+        amber: 'border-l-[#F59E0B]',
+        slate: 'border-l-[#98A2B3]',
     };
 
     return map[tone] || map.slate;
@@ -174,11 +174,11 @@ function toneBorder(tone: string) {
 
 function toneIcon(tone: string) {
     const map: Record<string, string> = {
-        indigo: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/50 dark:text-indigo-300',
-        cyan: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/50 dark:text-cyan-300',
-        emerald: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300',
-        amber: 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300',
-        slate: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
+        indigo: 'bg-[#F1F3FF] text-[#5B5FEF]',
+        cyan: 'bg-[#ECFEFF] text-[#0891B2]',
+        emerald: 'bg-[#ECFDF5] text-[#10B981]',
+        amber: 'bg-[#FFFBEB] text-[#F59E0B]',
+        slate: 'bg-[#F3F7FC] text-[#667085]',
     };
 
     return map[tone] || map.slate;

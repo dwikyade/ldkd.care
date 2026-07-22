@@ -4,6 +4,7 @@ import ParticipantLayout from '@/Layouts/ParticipantLayout';
 import { Card, CardContent } from '@/Components/ui/Card';
 import { Button } from '@/Components/ui/Button';
 import { BookOpenCheck, CalendarCheck, CheckCircle2, Lightbulb, ShieldCheck } from 'lucide-react';
+import ParticipantStepper from '@/Components/ldkd/ParticipantStepper';
 
 type Language = 'id' | 'en';
 
@@ -86,6 +87,7 @@ export default function Result({ submission, tips }: Props) {
     return (
         <ParticipantLayout>
             <Head title={t.title} />
+            <ParticipantStepper current={4} />
 
             <motion.div
                 initial={{ opacity: 0, y: reduceMotion ? 0 : 18 }}

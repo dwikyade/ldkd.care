@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/Components/ui/Card';
 import { Button } from '@/Components/ui/Button';
 import { ArrowLeft, ArrowRight, CheckCircle2, GraduationCap, User } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import ParticipantStepper from '@/Components/ldkd/ParticipantStepper';
 
 type Language = 'id' | 'en';
 type Role = 'student' | 'teacher';
@@ -80,6 +81,7 @@ export default function SelectRole() {
             <Head title={t.title} />
 
             <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col pt-4">
+                <ParticipantStepper current={1} />
                 <Link href={route('participant.select-mode', { lang: language })} className="mb-8 inline-flex items-center text-sm text-slate-500 transition-colors hover:text-indigo-600">
                     <ArrowLeft className="mr-2 h-4 w-4" />
                     {t.back}
@@ -92,11 +94,11 @@ export default function SelectRole() {
                     className="mx-auto w-full"
                 >
                     <div className="mb-10 space-y-3 text-center">
-                        <span className="inline-flex rounded-full border border-indigo-100 bg-indigo-50 px-3 py-1 text-xs font-bold uppercase tracking-widest text-indigo-700">
+                        <span className="inline-flex rounded-full border border-[#D9DDFF] bg-[#F1F3FF] px-3 py-1 text-xs font-bold uppercase tracking-widest text-[#5B5FEF]">
                             {mode === 'pre_test' ? t.pre : t.post}
                         </span>
-                        <h1 className="font-heading text-3xl font-bold tracking-normal text-slate-950 sm:text-4xl">{t.title}</h1>
-                        <p className="mx-auto max-w-2xl leading-7 text-slate-600">{t.description}</p>
+                        <h1 className="font-heading text-3xl font-bold tracking-normal text-[#172033] sm:text-4xl">{t.title}</h1>
+                        <p className="mx-auto max-w-2xl leading-7 text-[#667085]">{t.description}</p>
                     </div>
 
                     <div className="grid gap-5 md:grid-cols-2">
@@ -117,7 +119,7 @@ export default function SelectRole() {
                                     animate={isSelected && !reduceMotion ? { scale: [1, 1.02, 1] } : { scale: 1 }}
                                     className="text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-4"
                                 >
-                                    <Card className={`h-full !bg-white !shadow-sm border-2 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg ${isSelected ? selectedClasses : '!border-slate-200'}`}>
+                                    <Card className={`h-full !bg-white !shadow-sm border-2 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg ${isSelected ? selectedClasses : '!border-[#E8ECF3]'}`}>
                                         <CardContent className="flex h-full flex-col p-7">
                                             <div className="mb-6 flex items-center justify-between">
                                                 <div className={`flex h-14 w-14 items-center justify-center rounded-2xl ${option.tone === 'indigo' ? 'bg-indigo-100 text-indigo-700' : 'bg-cyan-100 text-cyan-700'}`}>

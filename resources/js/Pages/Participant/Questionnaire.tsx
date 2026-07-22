@@ -18,6 +18,7 @@ import {
     Sparkles,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import ParticipantStepper from '@/Components/ldkd/ParticipantStepper';
 
 type Language = 'id' | 'en';
 type Phase = 'instructions' | 'questions' | 'review';
@@ -69,6 +70,7 @@ const copy = {
         review: 'Review Jawaban',
         reviewTitle: 'Review Sebelum Submit',
         reviewText: 'Pastikan semua soal sudah terjawab. Anda masih dapat kembali untuk mengubah jawaban.',
+        finalConfirm: 'Saya sudah memeriksa jawaban dan siap mengirim kuesioner.',
         edit: 'Edit',
         submit: 'Submit Jawaban',
         submitting: 'Menyimpan Jawaban',
@@ -105,6 +107,7 @@ const copy = {
         review: 'Review Answers',
         reviewTitle: 'Review Before Submit',
         reviewText: 'Make sure all questions are answered. You can still go back and change answers.',
+        finalConfirm: 'I have reviewed my answers and am ready to submit the questionnaire.',
         edit: 'Edit',
         submit: 'Submit Answers',
         submitting: 'Saving Answers',
@@ -129,6 +132,7 @@ export default function Questionnaire({ questions, participant_id, test_type, ac
     const [hasAgreed, setHasAgreed] = useState(false);
     const [validationError, setValidationError] = useState<string | null>(null);
     const [submitError, setSubmitError] = useState<string | null>(null);
+    const [finalConfirmed, setFinalConfirmed] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSubmitted, setIsSubmitted] = useState(false);
     const t = copy[language];
@@ -282,6 +286,7 @@ export default function Questionnaire({ questions, participant_id, test_type, ac
             <Head title={t.title} />
 
             <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col pb-12 pt-2">
+                <ParticipantStepper current={3} />
                 <section className="mb-8 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
                     <div className="grid gap-5 p-5 sm:p-6 lg:grid-cols-[1.08fr_0.92fr]">
                         <div className="flex flex-col justify-between">
@@ -545,12 +550,22 @@ export default function Questionnaire({ questions, participant_id, test_type, ac
                                         </div>
                                     )}
 
+                                    <label className="mt-6 flex cursor-pointer items-start gap-3 rounded-2xl border border-[#E8ECF3] bg-[#F8FAFC] p-4 transition hover:border-[#D9DDFF] hover:bg-[#F1F3FF]/50">
+                                        <input
+                                            type="checkbox"
+                                            checked={finalConfirmed}
+                                            onChange={(event) => setFinalConfirmed(event.target.checked)}
+                                            className="mt-1 h-5 w-5 rounded border-slate-300 text-[#5B5FEF] focus:ring-[#5B5FEF]"
+                                        />
+                                        <span className="font-medium leading-6 text-[#667085]">{t.finalConfirm}</span>
+                                    </label>
+
                                     <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
                                         <Button variant="ghost" onClick={() => setPhase('questions')} disabled={isSubmitting}>
                                             <ArrowLeft className="mr-2 h-4 w-4" />
                                             {t.prev}
                                         </Button>
-                                        <Button size="lg" onClick={submit} disabled={isSubmitting || isSubmitted || missingQuestions.length > 0} className="gap-2">
+                                        <Button size="lg" onClick={submit} disabled={isSubmitting || isSubmitted || missingQuestions.length > 0 || !finalConfirmed} className="gap-2">
                                             {isSubmitted ? (
                                                 <Check className="h-5 w-5" />
                                             ) : isSubmitting ? (
