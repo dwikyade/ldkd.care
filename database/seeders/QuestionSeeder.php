@@ -9,46 +9,59 @@ class QuestionSeeder extends Seeder
 {
     public function run(): void
     {
-        // Sample questions for Digital Literacy
-        $q1 = Question::create([
-            'module' => 'digital_literacy',
-            'text_id' => 'Saya selalu memverifikasi kebenaran informasi sebelum membagikannya di media sosial.',
-            'text_en' => 'I always verify the truthfulness of information before sharing it on social media.',
-            'display_order' => 1,
-        ]);
-        
-        $this->addOptions($q1);
+        $questions = [
+            'digital_literacy' => [
+                'Saya selalu memverifikasi kebenaran informasi sebelum membagikannya di media sosial.',
+                'Saya tahu cara mengenali berita palsu atau hoaks di internet.',
+                'Saya membandingkan informasi dari beberapa sumber sebelum mengambil kesimpulan.',
+                'Saya dapat membedakan fakta, opini, dan iklan dalam konten digital.',
+                'Saya menggunakan teknologi digital secara bertanggung jawab dan menghargai orang lain.',
+            ],
+            'data_security' => [
+                'Saya menggunakan kombinasi huruf, angka, dan simbol untuk kata sandi saya.',
+                'Saya tidak pernah membagikan kode OTP kepada siapa pun.',
+                'Saya mengenali tanda-tanda tautan phishing atau penipuan digital.',
+                'Saya memeriksa izin aplikasi sebelum memasang atau menggunakannya.',
+                'Saya mengaktifkan pengamanan tambahan seperti PIN, biometrik, atau autentikasi dua faktor.',
+            ],
+        ];
 
-        $q2 = Question::create([
-            'module' => 'digital_literacy',
-            'text_id' => 'Saya tahu cara mengenali berita palsu (hoaks) di internet.',
-            'text_en' => 'I know how to recognize fake news (hoaxes) on the internet.',
-            'display_order' => 2,
-        ]);
-        
-        $this->addOptions($q2);
+        $translations = [
+            'I always verify information before sharing it on social media.',
+            'I know how to recognize fake news or hoaxes on the internet.',
+            'I compare information from multiple sources before drawing conclusions.',
+            'I can distinguish facts, opinions, and advertisements in digital content.',
+            'I use digital technology responsibly and respect others.',
+            'I use a combination of letters, numbers, and symbols for my passwords.',
+            'I never share OTP codes with anyone.',
+            'I recognize signs of phishing links or digital scams.',
+            'I check app permissions before installing or using them.',
+            'I enable extra protection such as PIN, biometrics, or two-factor authentication.',
+        ];
 
-        // Sample questions for Data Security
-        $q3 = Question::create([
-            'module' => 'data_security',
-            'text_id' => 'Saya menggunakan kombinasi huruf, angka, dan simbol untuk kata sandi saya.',
-            'text_en' => 'I use a combination of letters, numbers, and symbols for my passwords.',
-            'display_order' => 1,
-        ]);
+        $translationIndex = 0;
 
-        $this->addOptions($q3);
+        foreach ($questions as $module => $items) {
+            foreach ($items as $index => $text) {
+                $question = Question::updateOrCreate(
+                    [
+                        'module' => $module,
+                        'display_order' => $index + 1,
+                    ],
+                    [
+                        'text_id' => $text,
+                        'text_en' => $translations[$translationIndex],
+                        'is_active' => true,
+                    ],
+                );
 
-        $q4 = Question::create([
-            'module' => 'data_security',
-            'text_id' => 'Saya tidak pernah membagikan kode OTP (One Time Password) kepada siapapun.',
-            'text_en' => 'I never share OTP (One Time Password) codes with anyone.',
-            'display_order' => 2,
-        ]);
-
-        $this->addOptions($q4);
+                $this->syncOptions($question);
+                $translationIndex++;
+            }
+        }
     }
 
-    private function addOptions(Question $question): void
+    private function syncOptions(Question $question): void
     {
         $options = [
             ['label_id' => 'Sangat Tidak Setuju', 'label_en' => 'Strongly Disagree', 'weight' => 1],
@@ -57,14 +70,16 @@ class QuestionSeeder extends Seeder
             ['label_id' => 'Sangat Setuju', 'label_en' => 'Strongly Agree', 'weight' => 4],
         ];
 
-        $order = 1;
-        foreach ($options as $opt) {
-            $question->answerOptions()->create([
-                'label_id' => $opt['label_id'],
-                'label_en' => $opt['label_en'],
-                'weight' => $opt['weight'],
-                'display_order' => $order++,
-            ]);
+        foreach ($options as $index => $option) {
+            $question->answerOptions()->updateOrCreate(
+                ['display_order' => $index + 1],
+                [
+                    'label_id' => $option['label_id'],
+                    'label_en' => $option['label_en'],
+                    'weight' => $option['weight'],
+                    'is_active' => true,
+                ],
+            );
         }
     }
 }

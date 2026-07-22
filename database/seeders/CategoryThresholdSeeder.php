@@ -11,36 +11,27 @@ class CategoryThresholdSeeder extends Seeder
     {
         $modules = ['digital_literacy', 'data_security'];
         
+        $thresholds = [
+            ['category' => 'low', 'minimum_percentage' => 0, 'maximum_percentage' => 49.99],
+            ['category' => 'medium', 'minimum_percentage' => 50, 'maximum_percentage' => 74.99],
+            ['category' => 'high', 'minimum_percentage' => 75, 'maximum_percentage' => 100],
+        ];
+
         foreach ($modules as $module) {
-            CategoryThreshold::insert([
-                [
-                    'module' => $module,
-                    'category' => 'low',
-                    'minimum_percentage' => 0,
-                    'maximum_percentage' => 49.99,
-                    'version' => 1,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ],
-                [
-                    'module' => $module,
-                    'category' => 'medium',
-                    'minimum_percentage' => 50,
-                    'maximum_percentage' => 74.99,
-                    'version' => 1,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ],
-                [
-                    'module' => $module,
-                    'category' => 'high',
-                    'minimum_percentage' => 75,
-                    'maximum_percentage' => 100,
-                    'version' => 1,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ],
-            ]);
+            foreach ($thresholds as $threshold) {
+                CategoryThreshold::updateOrCreate(
+                    [
+                        'module' => $module,
+                        'category' => $threshold['category'],
+                        'version' => 1,
+                    ],
+                    [
+                        'minimum_percentage' => $threshold['minimum_percentage'],
+                        'maximum_percentage' => $threshold['maximum_percentage'],
+                        'is_active' => true,
+                    ],
+                );
+            }
         }
     }
 }

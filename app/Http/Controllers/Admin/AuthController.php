@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\AuditLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -28,6 +29,7 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
+            AuditLogger::record('admin_login', 'User', Auth::id(), null, ['email' => $request->email]);
 
             return redirect()->intended(route('admin.dashboard'));
         }
@@ -39,6 +41,7 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
+        AuditLogger::record('admin_logout', 'User', Auth::id());
         Auth::logout();
 
         $request->session()->invalidate();

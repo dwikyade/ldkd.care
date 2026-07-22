@@ -6,7 +6,6 @@ import {
     School, 
     Users, 
     FileQuestion, 
-    Tags, 
     LogOut, 
     Menu,
     X,
@@ -30,13 +29,13 @@ export default function AdminLayout({ children }: Props) {
         { name: 'Dashboard', href: route('admin.dashboard'), icon: LayoutDashboard },
         { name: 'Kegiatan', href: route('admin.activities.index'), icon: CalendarDays },
         { name: 'Sekolah dan Kelas', href: route('admin.schools.index'), icon: School },
-        { name: 'Peserta', href: '#', icon: Users },
+        { name: 'Peserta', href: route('admin.participants.index'), icon: Users },
         { name: 'Soal', href: route('admin.questions.index'), icon: FileQuestion },
-        { name: 'Bobot dan Kategori', href: '#', icon: Scale },
-        { name: 'Hasil', href: '#', icon: ClipboardList },
-        { name: 'Perbandingan', href: '#', icon: BarChart3 },
-        { name: 'Export', href: '#', icon: Download },
-        { name: 'Audit Log', href: '#', icon: History },
+        { name: 'Bobot dan Kategori', href: route('admin.scoring.index'), icon: Scale },
+        { name: 'Hasil', href: route('admin.results.index'), icon: ClipboardList },
+        { name: 'Perbandingan', href: route('admin.comparisons.index'), icon: BarChart3 },
+        { name: 'Export', href: route('admin.export.index'), icon: Download },
+        { name: 'Audit Log', href: route('admin.audit-logs.index'), icon: History },
     ];
 
     const handleLogout = () => {
@@ -72,6 +71,7 @@ export default function AdminLayout({ children }: Props) {
                     <button 
                         className="ml-auto text-[#667085] hover:text-[#172033] lg:hidden"
                         onClick={() => setSidebarOpen(false)}
+                        aria-label="Tutup menu admin"
                     >
                         <X className="w-5 h-5" />
                     </button>
@@ -86,6 +86,7 @@ export default function AdminLayout({ children }: Props) {
                             <Link
                                 key={item.name}
                                 href={item.href}
+                                aria-current={isActive ? 'page' : undefined}
                                 className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors ${
                                     isActive 
                                     ? 'bg-[#F1F3FF] text-[#5B5FEF]' 
@@ -103,6 +104,7 @@ export default function AdminLayout({ children }: Props) {
                     <button 
                         onClick={handleLogout}
                         className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 font-semibold text-[#F43F5E] transition-colors hover:bg-rose-50"
+                        aria-label="Keluar dari dashboard admin"
                     >
                         <LogOut className="w-5 h-5 text-rose-500" />
                         Keluar
@@ -117,6 +119,7 @@ export default function AdminLayout({ children }: Props) {
                     <button 
                         className="text-[#667085] hover:text-[#172033] lg:hidden"
                         onClick={() => setSidebarOpen(true)}
+                        aria-label="Buka menu admin"
                     >
                         <Menu className="w-6 h-6" />
                     </button>

@@ -6,6 +6,10 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ParticipantController;
 use App\Http\Controllers\Admin\ResultController;
 use App\Http\Controllers\Admin\ComparisonController;
+use App\Http\Controllers\Admin\AuditLogController;
+use App\Http\Controllers\Admin\ClassroomController;
+use App\Http\Controllers\Admin\ExportController;
+use App\Http\Controllers\Admin\ScoringSettingController;
 
 Route::prefix('admin')->name('admin.')->group(function () {
     
@@ -23,14 +27,22 @@ Route::prefix('admin')->name('admin.')->group(function () {
         
         // Master Data & Activities
         Route::resource('activities', \App\Http\Controllers\Admin\ActivityController::class)->except(['show']);
+        Route::post('schools/{school}/classes', [ClassroomController::class, 'store'])->name('schools.classes.store');
+        Route::put('schools/{school}/classes/{classroom}', [ClassroomController::class, 'update'])->name('schools.classes.update');
+        Route::delete('schools/{school}/classes/{classroom}', [ClassroomController::class, 'destroy'])->name('schools.classes.destroy');
         Route::resource('schools', \App\Http\Controllers\Admin\SchoolController::class)->except(['show']);
         Route::post('participants/import', [ParticipantController::class, 'import'])->name('participants.import');
         Route::resource('participants', ParticipantController::class)->except(['show']);
         Route::resource('questions', \App\Http\Controllers\Admin\QuestionController::class)->except(['show']);
+        Route::get('scoring', [ScoringSettingController::class, 'index'])->name('scoring.index');
+        Route::put('scoring', [ScoringSettingController::class, 'update'])->name('scoring.update');
+        Route::get('export', [ExportController::class, 'index'])->name('export.index');
+        Route::get('export/participants', [ExportController::class, 'participants'])->name('export.participants');
         Route::get('results/export', [ResultController::class, 'export'])->name('results.export');
         Route::get('results', [ResultController::class, 'index'])->name('results.index');
         Route::get('comparisons/export', [ComparisonController::class, 'export'])->name('comparisons.export');
         Route::get('comparisons', [ComparisonController::class, 'index'])->name('comparisons.index');
+        Route::get('audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
         
     });
 });

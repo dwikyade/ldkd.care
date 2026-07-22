@@ -2,158 +2,156 @@ import { Head, Link, useForm } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Card, CardContent } from '@/Components/ui/Card';
 import { Button } from '@/Components/ui/Button';
-import { Activity } from '@/types';
-import { ArrowLeft, Save } from 'lucide-react';
+import type { Activity } from '@/types';
+import { ArrowLeft, Calendar, Save } from 'lucide-react';
+import type { FormEvent, ReactNode } from 'react';
 
 interface Props {
     activity?: Activity;
 }
 
-export default function Form({ activity }: Props) {
-    const isEditing = !!activity;
-    
-    // Format dates for input type="date"
-    const formatDateForInput = (dateString?: string) => {
-        if (!dateString) return '';
-        const d = new Date(dateString);
-        return d.toISOString().split('T')[0];
-    };
+interface ActivityFormData {
+    name: string;
+    start_date: string;
+    end_date: string;
+    theme: string;
+    is_active: boolean;
+}
 
-    const { data, setData, post, put, processing, errors } = useForm({
+export default function Form({ activity }: Props) {
+    const isEditing = Boolean(activity);
+
+    const form = useForm<ActivityFormData>({
         name: activity?.name || '',
-        start_date: formatDateForInput(activity?.start_date) || '',
-        end_date: formatDateForInput(activity?.end_date) || '',
+        start_date: formatDateForInput(activity?.start_date),
+        end_date: formatDateForInput(activity?.end_date),
         theme: activity?.theme || '',
         is_active: activity?.is_active ?? true,
     });
 
-    const submit = (e: React.FormEvent) => {
-        e.preventDefault();
-        
-        if (isEditing) {
-            put(route('admin.activities.update', activity.id));
+    const submit = (event: FormEvent) => {
+        event.preventDefault();
+
+        if (activity) {
+            form.put(route('admin.activities.update', activity.id));
         } else {
-            post(route('admin.activities.store'));
+            form.post(route('admin.activities.store'));
         }
     };
 
     return (
         <AdminLayout>
-            <Head title={isEditing ? "Edit Kegiatan" : "Tambah Kegiatan"} />
+            <Head title={isEditing ? 'Edit Kegiatan' : 'Tambah Kegiatan'} />
 
             <div className="mb-8">
-                <Link href={route('admin.activities.index')} className="inline-flex items-center text-sm font-medium text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 mb-4 transition-colors">
-                    <ArrowLeft className="w-4 h-4 mr-1" />
-                    Kembali ke Daftar
+                <Link href={route('admin.activities.index')} className="mb-4 inline-flex items-center gap-2 text-sm font-semibold text-[#667085] hover:text-[#5B5FEF]">
+                    <ArrowLeft className="h-4 w-4" />
+                    Kembali ke Kegiatan
                 </Link>
-                <h1 className="text-2xl font-bold font-heading text-slate-900 dark:text-white">
-                    {isEditing ? 'Edit Kegiatan' : 'Tambah Kegiatan Baru'}
+                <p className="text-sm font-bold uppercase tracking-[0.18em] text-[#5B5FEF]">Master Data</p>
+                <h1 className="mt-2 font-heading text-3xl font-bold tracking-[-0.01em] text-[#172033]">
+                    {isEditing ? 'Edit Kegiatan' : 'Tambah Kegiatan'}
                 </h1>
-                <p className="text-slate-500 dark:text-slate-400">Silakan isi formulir di bawah ini dengan lengkap.</p>
+                <p className="mt-1 text-[#667085]">Atur periode kegiatan yang akan digunakan untuk peserta dan hasil kuesioner.</p>
             </div>
 
-            <div className="max-w-2xl">
+            <form onSubmit={submit} className="max-w-3xl">
                 <Card>
-                    <CardContent className="p-6 md:p-8">
-                        <form onSubmit={submit} className="space-y-6">
-                            
-                            <div className="space-y-2">
-                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                                    Nama Kegiatan <span className="text-rose-500">*</span>
-                                </label>
+                    <CardContent className="space-y-6 p-6 md:p-8">
+                        <div className="flex items-center gap-3 border-b border-[#E8ECF3] pb-5">
+                            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#F1F3FF] text-[#5B5FEF]">
+                                <Calendar className="h-5 w-5" />
+                            </div>
+                            <div>
+                                <h2 className="font-heading text-xl font-bold text-[#172033]">Informasi Kegiatan</h2>
+                                <p className="text-sm text-[#667085]">Nama dan tanggal ini menjadi konteks utama data pengisian.</p>
+                            </div>
+                        </div>
+
+                        <Field label="Nama Kegiatan" error={form.errors.name}>
+                            <input
+                                value={form.data.name}
+                                onChange={(event) => form.setData('name', event.target.value)}
+                                className={inputClass}
+                                placeholder="Contoh: Edukasi Literasi Digital Semester Ganjil"
+                                autoFocus
+                            />
+                        </Field>
+
+                        <div className="grid gap-5 md:grid-cols-2">
+                            <Field label="Tanggal Mulai" error={form.errors.start_date}>
                                 <input
-                                    type="text"
-                                    value={data.name}
-                                    onChange={e => setData('name', e.target.value)}
-                                    className={`w-full px-4 py-2.5 rounded-xl border focus:ring-2 focus:outline-none bg-white dark:bg-slate-900 dark:text-white ${
-                                        errors.name ? 'border-rose-300 focus:ring-rose-500' : 'border-slate-300 dark:border-slate-700 focus:ring-indigo-500'
-                                    }`}
-                                    placeholder="Contoh: Sosialisasi Literasi Digital 2024"
+                                    type="date"
+                                    value={form.data.start_date}
+                                    onChange={(event) => form.setData('start_date', event.target.value)}
+                                    className={inputClass}
                                 />
-                                {errors.name && <p className="text-sm text-rose-500">{errors.name}</p>}
-                            </div>
+                            </Field>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="space-y-2">
-                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                                        Tanggal Mulai <span className="text-rose-500">*</span>
-                                    </label>
-                                    <input
-                                        type="date"
-                                        value={data.start_date}
-                                        onChange={e => setData('start_date', e.target.value)}
-                                        className={`w-full px-4 py-2.5 rounded-xl border focus:ring-2 focus:outline-none bg-white dark:bg-slate-900 dark:text-white ${
-                                            errors.start_date ? 'border-rose-300 focus:ring-rose-500' : 'border-slate-300 dark:border-slate-700 focus:ring-indigo-500'
-                                        }`}
-                                    />
-                                    {errors.start_date && <p className="text-sm text-rose-500">{errors.start_date}</p>}
-                                </div>
-
-                                <div className="space-y-2">
-                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                                        Tanggal Selesai <span className="text-rose-500">*</span>
-                                    </label>
-                                    <input
-                                        type="date"
-                                        value={data.end_date}
-                                        onChange={e => setData('end_date', e.target.value)}
-                                        className={`w-full px-4 py-2.5 rounded-xl border focus:ring-2 focus:outline-none bg-white dark:bg-slate-900 dark:text-white ${
-                                            errors.end_date ? 'border-rose-300 focus:ring-rose-500' : 'border-slate-300 dark:border-slate-700 focus:ring-indigo-500'
-                                        }`}
-                                    />
-                                    {errors.end_date && <p className="text-sm text-rose-500">{errors.end_date}</p>}
-                                </div>
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                                    Tema / Deskripsi Singkat
-                                </label>
-                                <textarea
-                                    value={data.theme || ''}
-                                    onChange={e => setData('theme', e.target.value)}
-                                    rows={3}
-                                    className={`w-full px-4 py-2.5 rounded-xl border focus:ring-2 focus:outline-none bg-white dark:bg-slate-900 dark:text-white ${
-                                        errors.theme ? 'border-rose-300 focus:ring-rose-500' : 'border-slate-300 dark:border-slate-700 focus:ring-indigo-500'
-                                    }`}
-                                    placeholder="Opsional. Deskripsi singkat tentang kegiatan ini yang akan muncul di halaman awal peserta."
+                            <Field label="Tanggal Selesai" error={form.errors.end_date}>
+                                <input
+                                    type="date"
+                                    value={form.data.end_date}
+                                    onChange={(event) => form.setData('end_date', event.target.value)}
+                                    className={inputClass}
                                 />
-                                {errors.theme && <p className="text-sm text-rose-500">{errors.theme}</p>}
-                            </div>
+                            </Field>
+                        </div>
 
-                            <div className="flex items-center gap-3 py-2 border-t border-slate-100 dark:border-slate-800">
-                                <div className="flex items-center h-5">
-                                    <input
-                                        id="is_active"
-                                        type="checkbox"
-                                        checked={data.is_active}
-                                        onChange={e => setData('is_active', e.target.checked)}
-                                        className="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-900"
-                                    />
-                                </div>
-                                <div>
-                                    <label htmlFor="is_active" className="font-medium text-slate-700 dark:text-slate-300">
-                                        Status Aktif
-                                    </label>
-                                    <p className="text-sm text-slate-500 dark:text-slate-400">
-                                        Hanya kegiatan aktif yang akan muncul di halaman pendaftaran peserta.
-                                    </p>
-                                </div>
-                            </div>
+                        <Field label="Tema / Deskripsi Singkat" error={form.errors.theme} hint="Opsional, digunakan sebagai catatan konteks kegiatan.">
+                            <textarea
+                                value={form.data.theme}
+                                onChange={(event) => form.setData('theme', event.target.value)}
+                                rows={4}
+                                className={`${inputClass} h-auto py-3`}
+                                placeholder="Contoh: Penguatan keamanan akun, OTP, dan verifikasi informasi digital."
+                            />
+                        </Field>
 
-                            <div className="pt-4 flex justify-end gap-3">
-                                <Link href={route('admin.activities.index')}>
-                                    <Button type="button" variant="outline">Batal</Button>
-                                </Link>
-                                <Button type="submit" className="gap-2" disabled={processing}>
-                                    <Save className="w-4 h-4" />
-                                    {processing ? 'Menyimpan...' : 'Simpan Data'}
-                                </Button>
-                            </div>
-                        </form>
+                        <label className="flex items-start gap-3 rounded-2xl border border-[#E8ECF3] bg-[#F8FAFC] p-4">
+                            <input
+                                type="checkbox"
+                                checked={form.data.is_active}
+                                onChange={(event) => form.setData('is_active', event.target.checked)}
+                                className="mt-1 h-5 w-5 rounded border-slate-300 text-[#5B5FEF] focus:ring-[#5B5FEF]"
+                            />
+                            <span>
+                                <span className="block font-bold text-[#172033]">Kegiatan aktif</span>
+                                <span className="text-sm text-[#667085]">Kegiatan aktif dapat dipilih untuk peserta dan pengisian baru.</span>
+                            </span>
+                        </label>
                     </CardContent>
                 </Card>
-            </div>
+
+                <div className="mt-6 flex justify-end gap-3">
+                    <Button asChild variant="outline">
+                        <Link href={route('admin.activities.index')}>Batal</Link>
+                    </Button>
+                    <Button type="submit" disabled={form.processing} className="gap-2">
+                        <Save className="h-4 w-4" />
+                        {form.processing ? 'Menyimpan...' : 'Simpan Kegiatan'}
+                    </Button>
+                </div>
+            </form>
         </AdminLayout>
     );
+}
+
+const inputClass = 'h-11 w-full rounded-xl border border-[#E8ECF3] bg-white px-3 text-sm text-[#172033] focus:outline-none focus:ring-2 focus:ring-[#5B5FEF]';
+
+function Field({ label, error, hint, children }: { label: string; error?: string; hint?: string; children: ReactNode }) {
+    return (
+        <div className="space-y-2">
+            <label className="text-sm font-bold text-[#172033]">{label}</label>
+            {children}
+            {hint && <p className="text-xs text-[#667085]">{hint}</p>}
+            {error && <p className="text-sm font-semibold text-[#F43F5E]">{error}</p>}
+        </div>
+    );
+}
+
+function formatDateForInput(value?: string | null) {
+    if (! value) return '';
+
+    return value.slice(0, 10);
 }

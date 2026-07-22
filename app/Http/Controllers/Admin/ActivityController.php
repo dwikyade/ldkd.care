@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Activity;
+use App\Services\AuditLogger;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -37,7 +38,8 @@ class ActivityController extends Controller
             'is_active' => 'boolean',
         ]);
 
-        Activity::create($validated);
+        $activity = Activity::create($validated);
+        AuditLogger::record('create_activity', $activity, null, null, $activity->toArray());
 
         return redirect()->route('admin.activities.index')->with('success', 'Kegiatan berhasil ditambahkan.');
     }
@@ -59,7 +61,9 @@ class ActivityController extends Controller
             'is_active' => 'boolean',
         ]);
 
+        $oldValue = $activity->toArray();
         $activity->update($validated);
+        AuditLogger::record('update_activity', $activity, null, $oldValue, $activity->fresh()->toArray());
 
         return redirect()->route('admin.activities.index')->with('success', 'Kegiatan berhasil diperbarui.');
     }
@@ -71,7 +75,9 @@ class ActivityController extends Controller
             return back()->with('error', 'Tidak dapat menghapus kegiatan yang sudah memiliki peserta.');
         }
 
+        $oldValue = $activity->toArray();
         $activity->delete();
+        AuditLogger::record('delete_activity', 'Activity', $activity->id, $oldValue);
 
         return redirect()->route('admin.activities.index')->with('success', 'Kegiatan berhasil dihapus.');
     }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Question;
 use App\Models\AnswerOption;
+use App\Services\AuditLogger;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -49,7 +50,7 @@ class QuestionController extends Controller
             'answer_options.*.weight' => 'required|numeric|min:0|max:100',
         ]);
 
-        DB::transaction(function () use ($validated) {
+        $question = DB::transaction(function () use ($validated) {
             $maxOrder = Question::where('module', $validated['module'])->max('display_order') ?? 0;
             
             $question = Question::create([
@@ -68,7 +69,11 @@ class QuestionController extends Controller
                     'display_order' => $index + 1,
                 ]);
             }
+
+            return $question->load('answerOptions');
         });
+
+        AuditLogger::record('create_question', $question, null, null, $question->toArray());
 
         return redirect()->route('admin.questions.index', ['module' => $validated['module']])
             ->with('success', 'Soal kuesioner berhasil ditambahkan.');
@@ -96,6 +101,8 @@ class QuestionController extends Controller
             'answer_options.*.label_en' => 'nullable|string',
             'answer_options.*.weight' => 'required|numeric|min:0|max:100',
         ]);
+
+        $oldValue = $question->load('answerOptions')->toArray();
 
         DB::transaction(function () use ($validated, $question) {
             $question->update([
@@ -127,6 +134,8 @@ class QuestionController extends Controller
             }
         });
 
+        AuditLogger::record('update_question', $question, null, $oldValue, $question->fresh()->load('answerOptions')->toArray());
+
         return redirect()->route('admin.questions.index', ['module' => $validated['module']])
             ->with('success', 'Soal kuesioner berhasil diperbarui.');
     }
@@ -134,7 +143,10 @@ class QuestionController extends Controller
     public function destroy(Question $question): RedirectResponse
     {
         $module = $question->module;
+        $oldValue = $question->load('answerOptions')->toArray();
         $question->delete();
+
+        AuditLogger::record('delete_question', 'Question', $question->id, $oldValue);
 
         return redirect()->route('admin.questions.index', ['module' => $module])
             ->with('success', 'Soal berhasil dihapus.');

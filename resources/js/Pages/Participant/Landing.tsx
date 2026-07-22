@@ -285,8 +285,9 @@ export default function Landing({ activity }: Props) {
                             <Globe2 className="h-4 w-4" />
                             {language.toUpperCase()}
                         </button>
-                        <Link href={route('admin.login')} className="inline-flex h-9 items-center rounded-xl border border-[#E8ECF3] bg-white px-3 text-xs font-bold text-[#172033] transition hover:text-[#5B5FEF]">
-                            {t.admin}
+                        <Link href={route('admin.login')} aria-label={t.admin} title={t.admin} className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-[#E8ECF3]/80 bg-white/70 text-[#98A2B3] transition hover:-translate-y-0.5 hover:border-[#D9DDFF] hover:bg-white hover:text-[#5B5FEF]">
+                            <LockKeyhole className="h-4 w-4" />
+                            <span className="sr-only">{t.admin}</span>
                         </Link>
                         <Link href={questionnaireHref} className="inline-flex h-9 items-center gap-2 rounded-xl bg-[#172033] px-4 text-xs font-bold text-white transition hover:-translate-y-0.5 hover:bg-[#5B5FEF]">
                             {language === 'id' ? 'Isi Kuesioner' : 'Questionnaire'}
@@ -322,12 +323,13 @@ export default function Landing({ activity }: Props) {
                                     </a>
                                 ))}
                             </div>
-                            <div className="mt-4 grid grid-cols-2 gap-2">
+                            <div className="mt-4 grid grid-cols-[1fr_auto] gap-2">
                                 <button type="button" onClick={() => setLanguage(language === 'id' ? 'en' : 'id')} className="rounded-xl border border-[#E8ECF3] px-3 py-3 text-sm font-bold">
                                     {language.toUpperCase()}
                                 </button>
-                                <Link href={route('admin.login')} className="rounded-xl border border-[#E8ECF3] px-3 py-3 text-center text-sm font-bold">
-                                    {t.admin}
+                                <Link href={route('admin.login')} aria-label={t.admin} title={t.admin} className="flex h-12 w-12 items-center justify-center rounded-xl border border-[#E8ECF3] text-[#98A2B3] transition hover:bg-[#F8FAFC] hover:text-[#5B5FEF]">
+                                    <LockKeyhole className="h-4 w-4" />
+                                    <span className="sr-only">{t.admin}</span>
                                 </Link>
                                 <Link href={questionnaireHref} className="col-span-2 rounded-xl bg-[#5B5FEF] px-3 py-3 text-center text-sm font-bold text-white">
                                     {t.start}

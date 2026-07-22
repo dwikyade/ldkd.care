@@ -51,7 +51,17 @@ class EducationalTipsSeeder extends Seeder
         ];
 
         foreach ($tips as $tip) {
-            EducationalTip::create($tip);
+            EducationalTip::updateOrCreate(
+                [
+                    'module' => $tip['module'],
+                    'category' => $tip['category'],
+                ],
+                [
+                    'content_id' => $tip['content_id'],
+                    'content_en' => $tip['content_en'],
+                    'is_active' => true,
+                ],
+            );
         }
     }
 }

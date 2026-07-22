@@ -74,6 +74,7 @@ const copy = {
         edit: 'Edit',
         submit: 'Submit Jawaban',
         submitting: 'Menyimpan Jawaban',
+        navigator: 'Navigator Soal',
         missing: 'Belum dijawab',
         complete: 'Lengkap',
         validation: 'Pilih salah satu jawaban untuk melanjutkan.',
@@ -111,6 +112,7 @@ const copy = {
         edit: 'Edit',
         submit: 'Submit Answers',
         submitting: 'Saving Answers',
+        navigator: 'Question Navigator',
         missing: 'Missing',
         complete: 'Complete',
         validation: 'Choose one answer to continue.',
@@ -368,6 +370,45 @@ export default function Questionnaire({ questions, participant_id, test_type, ac
                         </div>
                     </div>
                 </section>
+
+                {phase !== 'instructions' && (
+                    <Card className="mb-6 !border-[#E8ECF3] !bg-white/90 !shadow-sm">
+                        <CardContent className="p-4">
+                            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                                <div>
+                                    <p className="text-sm font-bold text-[#172033]">{t.navigator}</p>
+                                    <p className="mt-1 text-xs font-semibold text-[#667085]">
+                                        {answeredCount} / {allQuestions.length} {t.answered}
+                                    </p>
+                                </div>
+                                <div className="grid grid-cols-6 gap-2 sm:grid-cols-10 lg:flex lg:flex-wrap lg:justify-end">
+                                    {allQuestions.map((question, index) => {
+                                        const isActive = index === currentStep && phase === 'questions';
+                                        const isAnswered = Boolean(answers[question.id]);
+
+                                        return (
+                                            <button
+                                                key={question.id}
+                                                type="button"
+                                                onClick={() => goToQuestion(index)}
+                                                className={`flex h-9 w-9 items-center justify-center rounded-xl border text-xs font-bold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#5B5FEF] ${
+                                                    isActive
+                                                        ? 'border-[#5B5FEF] bg-[#5B5FEF] text-white shadow-sm'
+                                                        : isAnswered
+                                                          ? 'border-emerald-100 bg-emerald-50 text-emerald-700'
+                                                          : 'border-[#E8ECF3] bg-white text-[#98A2B3] hover:border-[#D9DDFF] hover:text-[#5B5FEF]'
+                                                }`}
+                                                aria-label={`${t.question} ${index + 1}`}
+                                            >
+                                                {index + 1}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                )}
 
                 <AnimatePresence mode="wait">
                     {phase === 'instructions' && (
