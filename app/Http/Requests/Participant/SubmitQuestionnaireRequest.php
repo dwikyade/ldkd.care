@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\Participant;
 
+use App\Models\Question;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Validator;
 
 class SubmitQuestionnaireRequest extends FormRequest
 {
@@ -21,5 +23,48 @@ class SubmitQuestionnaireRequest extends FormRequest
             'answers' => ['required', 'array'],
             'answers.*' => ['required', 'integer', 'exists:answer_options,id'],
         ];
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator) {
+            if ($validator->errors()->isNotEmpty()) {
+                return;
+            }
+
+            $questions = Question::with(['answerOptions' => function ($query) {
+                $query->where('is_active', true);
+            }])
+                ->where('is_active', true)
+                ->get();
+
+            if ($questions->isEmpty()) {
+                $validator->errors()->add('answers', 'Belum ada soal aktif yang dapat dijawab.');
+                return;
+            }
+
+            $answers = collect($this->input('answers', []))
+                ->mapWithKeys(fn ($optionId, $questionId) => [(int) $questionId => (int) $optionId]);
+
+            $missingQuestionIds = $questions
+                ->filter(fn (Question $question) => ! $answers->has($question->id))
+                ->pluck('id');
+
+            if ($missingQuestionIds->isNotEmpty()) {
+                $validator->errors()->add('answers', 'Semua soal wajib dijawab sebelum kuesioner dikirim.');
+                return;
+            }
+
+            foreach ($questions as $question) {
+                $selectedOptionId = $answers->get($question->id);
+
+                if (! $question->answerOptions->contains('id', $selectedOptionId)) {
+                    $validator->errors()->add(
+                        "answers.{$question->id}",
+                        'Pilihan jawaban tidak valid untuk salah satu soal.'
+                    );
+                }
+            }
+        });
     }
 }

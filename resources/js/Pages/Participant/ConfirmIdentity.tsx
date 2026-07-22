@@ -1,8 +1,11 @@
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
+import { motion, useReducedMotion } from 'framer-motion';
 import ParticipantLayout from '@/Layouts/ParticipantLayout';
 import { Card, CardContent } from '@/Components/ui/Card';
 import { Button } from '@/Components/ui/Button';
-import { ArrowRight, UserCheck, RefreshCcw } from 'lucide-react';
+import { ArrowRight, RefreshCcw, UserCheck } from 'lucide-react';
+
+type Language = 'id' | 'en';
 
 interface Participant {
     id: number;
@@ -10,58 +13,90 @@ interface Participant {
     participant_code: string;
     role: string;
     school: { name: string };
-    classroom?: { name: string };
+    classroom?: { name: string } | null;
 }
 
 interface Props {
     participant: Participant;
-    test_type: string;
+    test_type: 'pre_test' | 'post_test';
+    language?: Language;
 }
 
-export default function ConfirmIdentity({ participant, test_type }: Props) {
+const copy = {
+    id: {
+        hello: 'Halo',
+        title: 'Pastikan data di bawah ini benar sebelum memulai pengisian.',
+        fullName: 'Nama Lengkap',
+        code: 'Kode Peserta',
+        roleSchool: 'Peran & Sekolah',
+        class: 'Kelas',
+        testType: 'Jenis Tes',
+        student: 'Siswa',
+        teacher: 'Guru',
+        at: 'di',
+        pre: 'Pre-Test',
+        post: 'Post-Test',
+        wrong: 'Bukan Saya',
+        correct: 'Ya, Ini Data Saya',
+    },
+    en: {
+        hello: 'Hello',
+        title: 'Make sure the data below is correct before starting.',
+        fullName: 'Full Name',
+        code: 'Participant Code',
+        roleSchool: 'Role & School',
+        class: 'Class',
+        testType: 'Test Type',
+        student: 'Student',
+        teacher: 'Teacher',
+        at: 'at',
+        pre: 'Pre-Test',
+        post: 'Post-Test',
+        wrong: 'Not Me',
+        correct: 'Yes, This Is My Data',
+    },
+};
+
+export default function ConfirmIdentity({ participant, test_type, language = 'id' }: Props) {
+    const reduceMotion = useReducedMotion();
+    const t = copy[language];
+
     return (
         <ParticipantLayout>
-            <Head title="Konfirmasi Identitas" />
-            
-            <div className="flex-1 flex flex-col items-center justify-center py-8 w-full max-w-lg mx-auto text-center space-y-8">
-                
-                <div className="w-20 h-20 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-sm mx-auto">
-                    <UserCheck className="w-10 h-10" />
-                </div>
-                
-                <div className="space-y-2">
-                    <h1 className="text-3xl font-bold font-heading text-slate-900 dark:text-white">Halo, {participant.full_name.split(' ')[0]}!</h1>
-                    <p className="text-slate-600 dark:text-slate-300">Pastikan data di bawah ini benar sebelum memulai pengisian.</p>
+            <Head title={language === 'id' ? 'Konfirmasi Identitas' : 'Confirm Identity'} />
+
+            <motion.div
+                initial={{ opacity: 0, y: reduceMotion ? 0 : 18 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35 }}
+                className="mx-auto flex w-full max-w-2xl flex-1 flex-col items-center justify-center py-6 text-center"
+            >
+                <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-indigo-100 text-indigo-600 shadow-sm">
+                    <UserCheck className="h-10 w-10" />
                 </div>
 
-                <Card className="w-full text-left">
+                <div className="mt-8 space-y-2">
+                    <h1 className="font-heading text-3xl font-bold tracking-normal text-slate-950">
+                        {t.hello}, {participant.full_name.split(' ')[0]}!
+                    </h1>
+                    <p className="leading-7 text-slate-600">{t.title}</p>
+                </div>
+
+                <Card className="mt-8 w-full !border-slate-200 !bg-white !shadow-sm text-left">
                     <CardContent className="p-6">
-                        <dl className="space-y-4 divide-y divide-slate-100 dark:divide-slate-800">
-                            <div className="flex flex-col pt-2">
-                                <dt className="text-sm font-medium text-slate-500 dark:text-slate-400">Nama Lengkap</dt>
-                                <dd className="mt-1 font-semibold text-slate-900 dark:text-white">{participant.full_name}</dd>
-                            </div>
+                        <dl className="space-y-4 divide-y divide-slate-100">
+                            <DataRow label={t.fullName} value={participant.full_name} />
+                            <DataRow label={t.code} value={participant.participant_code} valueClassName="font-mono text-indigo-600 dark:text-indigo-400" />
+                            <DataRow
+                                label={t.roleSchool}
+                                value={`${participant.role === 'student' ? t.student : t.teacher} ${t.at} ${participant.school.name}`}
+                            />
+                            {participant.classroom && <DataRow label={t.class} value={participant.classroom.name} />}
                             <div className="flex flex-col pt-4">
-                                <dt className="text-sm font-medium text-slate-500 dark:text-slate-400">Kode Peserta</dt>
-                                <dd className="mt-1 font-semibold text-indigo-600 dark:text-indigo-400 font-mono">{participant.participant_code}</dd>
-                            </div>
-                            <div className="flex flex-col pt-4">
-                                <dt className="text-sm font-medium text-slate-500 dark:text-slate-400">Peran & Sekolah</dt>
-                                <dd className="mt-1 font-semibold text-slate-900 dark:text-white">
-                                    {participant.role === 'student' ? 'Siswa' : 'Guru'} di {participant.school.name}
-                                </dd>
-                            </div>
-                            {participant.classroom && (
-                                <div className="flex flex-col pt-4">
-                                    <dt className="text-sm font-medium text-slate-500 dark:text-slate-400">Kelas</dt>
-                                    <dd className="mt-1 font-semibold text-slate-900 dark:text-white">{participant.classroom.name}</dd>
-                                </div>
-                            )}
-                            <div className="flex flex-col pt-4">
-                                <dt className="text-sm font-medium text-slate-500 dark:text-slate-400">Jenis Tes</dt>
+                                <dt className="text-sm font-medium text-slate-500">{t.testType}</dt>
                                 <dd className="mt-1">
-                                    <span className="inline-flex items-center rounded-full bg-slate-100 dark:bg-slate-800 px-2.5 py-0.5 text-xs font-semibold text-slate-800 dark:text-slate-200 uppercase">
-                                        {test_type === 'pre_test' ? 'Pre-Test' : 'Post-Test'}
+                                    <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold uppercase text-slate-800">
+                                        {test_type === 'pre_test' ? t.pre : t.post}
                                     </span>
                                 </dd>
                             </div>
@@ -69,21 +104,30 @@ export default function ConfirmIdentity({ participant, test_type }: Props) {
                     </CardContent>
                 </Card>
 
-                <div className="flex flex-col sm:flex-row gap-4 w-full pt-4">
-                    <Link href={route('participant.identify', { mode: test_type, role: participant.role })} className="flex-1">
+                <div className="mt-8 flex w-full flex-col gap-4 sm:flex-row">
+                    <Link href={route('participant.identify', { mode: test_type, role: participant.role, lang: language })} className="flex-1">
                         <Button variant="outline" className="w-full" size="lg">
-                            <RefreshCcw className="w-4 h-4 mr-2" />
-                            Bukan Saya
+                            <RefreshCcw className="mr-2 h-4 w-4" />
+                            {t.wrong}
                         </Button>
                     </Link>
                     <Link href={route('participant.questionnaire')} className="flex-1">
                         <Button className="w-full group" size="lg">
-                            Data Benar, Lanjutkan
-                            <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                            {t.correct}
+                            <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                         </Button>
                     </Link>
                 </div>
-            </div>
+            </motion.div>
         </ParticipantLayout>
+    );
+}
+
+function DataRow({ label, value, valueClassName = '' }: { label: string; value: string; valueClassName?: string }) {
+    return (
+        <div className="flex flex-col pt-4 first:pt-0">
+            <dt className="text-sm font-medium text-slate-500">{label}</dt>
+            <dd className={`mt-1 font-semibold text-slate-950 ${valueClassName}`}>{value}</dd>
+        </div>
     );
 }

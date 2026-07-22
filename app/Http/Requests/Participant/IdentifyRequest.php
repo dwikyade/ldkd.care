@@ -18,6 +18,7 @@ class IdentifyRequest extends FormRequest
             'test_type' => ['required', 'string', 'in:pre_test,post_test'],
             'role' => ['required', 'string', 'in:student,teacher'],
             'activity_id' => ['required', 'integer', 'exists:activities,id'],
+            'language' => ['nullable', 'string', 'in:id,en'],
         ];
     }
 }

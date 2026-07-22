@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from '@inertiajs/react';
-import { Shield } from 'lucide-react';
+import { ArrowRight, ShieldCheck } from 'lucide-react';
 
 interface Props {
     children: React.ReactNode;
@@ -8,40 +8,39 @@ interface Props {
 
 export default function ParticipantLayout({ children }: Props) {
     return (
-        <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 relative overflow-hidden flex flex-col">
-            
-            {/* Background Decorations */}
-            <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
-                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-indigo-500/10 blur-3xl" />
-                <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-cyan-500/10 blur-3xl" />
-            </div>
-
-            {/* Header */}
-            <header className="sticky top-0 z-40 w-full glass-panel border-b border-white/20 dark:border-slate-800/50">
-                <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-                    <Link href="/" className="flex items-center gap-2 group">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-cyan-500 flex items-center justify-center text-white shadow-lg group-hover:scale-105 transition-transform">
-                            <Shield className="w-6 h-6" />
-                        </div>
-                        <span className="font-heading font-bold text-xl tracking-tight text-slate-800 dark:text-white">
-                            LDKD <span className="text-indigo-600 dark:text-indigo-400">Care</span>
+        <div className="relative flex min-h-screen flex-col overflow-hidden bg-slate-50 text-slate-900">
+            <header className="sticky top-0 z-40 w-full border-b border-slate-200/80 bg-white/90 shadow-sm backdrop-blur-xl">
+                <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+                    <Link href="/" className="group flex items-center gap-3">
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-sm transition-transform group-hover:scale-105">
+                            <ShieldCheck className="h-5 w-5" />
+                        </span>
+                        <span className="font-heading text-xl font-bold tracking-tight text-slate-950">
+                            LDKD <span className="text-indigo-600">Care</span>
                         </span>
                     </Link>
-                    
-                    <div className="flex items-center gap-4">
-                        {/* We could add language toggle here later */}
+
+                    <div className="hidden items-center gap-3 sm:flex">
+                        <span className="rounded-full border border-indigo-100 bg-indigo-50 px-3 py-1 text-xs font-bold uppercase tracking-widest text-indigo-700">
+                            Assessment Flow
+                        </span>
+                        <Link
+                            href="/"
+                            className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                        >
+                            Beranda
+                            <ArrowRight className="h-4 w-4" />
+                        </Link>
                     </div>
                 </div>
             </header>
 
-            {/* Main Content */}
-            <main className="flex-1 container mx-auto px-4 py-8 max-w-4xl flex flex-col">
+            <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-4 py-8 sm:px-6 lg:px-8">
                 {children}
             </main>
-            
-            {/* Footer */}
-            <footer className="py-6 text-center text-sm text-slate-500 dark:text-slate-400">
-                &copy; {new Date().getFullYear()} LDKD Care. Aplikasi Evaluasi Literasi Digital dan Keamanan Data.
+
+            <footer className="border-t border-slate-200 bg-white py-6 text-center text-sm text-slate-500">
+                &copy; {new Date().getFullYear()} LDKD Care. Literasi Digital dan Keamanan Digital.
             </footer>
         </div>
     );

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Participant;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Participant\IdentifyRequest;
+use App\Models\Activity;
 use App\Models\Participant;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,9 +15,21 @@ class ParticipantController extends Controller
 {
     public function identify(Request $request): Response
     {
+        $language = in_array($request->query('lang'), ['id', 'en'], true)
+            ? $request->query('lang')
+            : 'id';
+
+        $activity = Activity::where('is_active', true)
+            ->whereDate('start_date', '<=', today())
+            ->whereDate('end_date', '>=', today())
+            ->latest('start_date')
+            ->first();
+
         return Inertia::render('Participant/Identify', [
-            'mode' => $request->query('mode'),
-            'role' => $request->query('role'),
+            'mode' => $request->query('mode', 'pre_test'),
+            'role' => $request->query('role', 'student'),
+            'language' => $language,
+            'activity' => $activity,
         ]);
     }
 
@@ -49,12 +62,14 @@ class ParticipantController extends Controller
                 'id' => $participant->id,
                 'test_type' => $request->test_type,
                 'activity_id' => $request->activity_id,
+                'language' => $request->input('language', 'id'),
             ]
         ]);
 
         return Inertia::render('Participant/ConfirmIdentity', [
             'participant' => $participant,
             'test_type' => $request->test_type,
+            'language' => $request->input('language', 'id'),
         ]);
     }
 }

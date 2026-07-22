@@ -3,7 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Models\Activity;
+use App\Models\Participant;
+use App\Models\School;
+use App\Models\Submission;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -11,8 +14,60 @@ class DashboardController extends Controller
 {
     public function index(): Response
     {
+        $completeParticipants = Participant::whereHas('submissions', function ($query) {
+            $query->where('test_type', 'pre_test');
+        })->whereHas('submissions', function ($query) {
+            $query->where('test_type', 'post_test');
+        })->count();
+
+        $totalParticipants = Participant::count();
+
+        $averagesByTest = Submission::query()
+            ->select('test_type')
+            ->selectRaw('AVG(digital_literacy_percentage) as digital_literacy')
+            ->selectRaw('AVG(data_security_percentage) as data_security')
+            ->groupBy('test_type')
+            ->get()
+            ->keyBy('test_type');
+
+        $chartData = collect([
+            ['key' => 'pre_test', 'name' => 'Pre-Test'],
+            ['key' => 'post_test', 'name' => 'Post-Test'],
+        ])->map(function (array $item) use ($averagesByTest) {
+            $row = $averagesByTest->get($item['key']);
+
+            return [
+                'name' => $item['name'],
+                'literasi' => round((float) ($row?->digital_literacy ?? 0), 2),
+                'keamanan' => round((float) ($row?->data_security ?? 0), 2),
+            ];
+        })->values();
+
+        $recentActivities = Submission::with('participant:id,full_name')
+            ->latest('submitted_at')
+            ->limit(5)
+            ->get()
+            ->map(fn (Submission $submission) => [
+                'id' => $submission->id,
+                'participant' => $submission->participant?->full_name ?? 'Peserta',
+                'test_type' => $submission->test_type,
+                'submitted_at' => optional($submission->submitted_at)->diffForHumans(),
+            ]);
+
         return Inertia::render('Admin/Dashboard', [
-            'stats' => [] // We will populate this later
+            'stats' => [
+                'total_participants' => $totalParticipants,
+                'total_pre_test' => Submission::where('test_type', 'pre_test')->count(),
+                'total_post_test' => Submission::where('test_type', 'post_test')->count(),
+                'complete_participants' => $completeParticipants,
+                'incomplete_participants' => max($totalParticipants - $completeParticipants, 0),
+                'avg_digital_literacy' => round((float) Submission::avg('digital_literacy_percentage'), 2),
+                'avg_data_security' => round((float) Submission::avg('data_security_percentage'), 2),
+                'total_schools' => School::count(),
+                'active_activities' => Activity::where('is_active', true)->count(),
+            ],
+            'chartData' => $chartData,
+            'recentActivities' => $recentActivities,
         ]);
     }
 }

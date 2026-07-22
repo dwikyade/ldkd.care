@@ -12,7 +12,7 @@ class ResultController extends Controller
 {
     public function show(string $token): Response|\Illuminate\Http\RedirectResponse
     {
-        $submission = clone Submission::with('participant')->where('result_token', $token)->first();
+        $submission = Submission::with('participant')->where('result_token', $token)->first();
 
         if (!$submission) {
             abort(404, 'Hasil tidak ditemukan.');

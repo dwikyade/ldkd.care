@@ -30,6 +30,7 @@ class QuestionnaireController extends Controller
             'participant_id' => $session['id'],
             'test_type' => $session['test_type'],
             'activity_id' => $session['activity_id'],
+            'language' => $session['language'] ?? 'id',
         ]);
     }
 }

@@ -50,8 +50,8 @@ class ScoringService
             if ($selectedOption) {
                 $answerDetails[] = [
                     'question_id' => $question->id,
-                    'question_text_snapshot' => clone $question->text_id, // Store ID text by default, could be customized
-                    'option_label_snapshot' => clone $selectedOption->label_id,
+                    'question_text_snapshot' => $question->text_id,
+                    'option_label_snapshot' => $selectedOption->label_id,
                     'weight_snapshot' => $weight,
                     'module' => $question->module,
                 ];
