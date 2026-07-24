@@ -50,6 +50,7 @@ class ScoringService
             if ($selectedOption) {
                 $answerDetails[] = [
                     'question_id' => $question->id,
+                    'answer_option_id' => $selectedOption->id,
                     'question_text_snapshot' => $question->text_id,
                     'option_label_snapshot' => $selectedOption->label_id,
                     'weight_snapshot' => $weight,

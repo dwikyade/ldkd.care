@@ -92,7 +92,11 @@ class ComparisonController extends Controller
 
     private function query(Request $request)
     {
-        return Participant::with(['school', 'classroom', 'submissions'])
+        return Participant::with([
+                'school',
+                'classroom',
+                'submissions' => fn ($query) => $query->where('status', 'completed'),
+            ])
             ->when($request->query('search'), function ($query, string $search) {
                 $query->where(function ($query) use ($search) {
                     $query->where('full_name', 'like', "%{$search}%")
@@ -104,14 +108,14 @@ class ComparisonController extends Controller
             ->when($request->query('role'), fn ($query, $role) => $query->where('role', $role))
             ->when($request->query('status'), function ($query, string $status) {
                 if ($status === 'complete') {
-                    $query->whereHas('submissions', fn ($query) => $query->where('test_type', 'pre_test'))
-                        ->whereHas('submissions', fn ($query) => $query->where('test_type', 'post_test'));
+                    $query->whereHas('submissions', fn ($query) => $query->where('test_type', 'pre_test')->where('status', 'completed'))
+                        ->whereHas('submissions', fn ($query) => $query->where('test_type', 'post_test')->where('status', 'completed'));
                 }
 
                 if ($status === 'incomplete') {
                     $query->where(function ($query) {
-                        $query->whereDoesntHave('submissions', fn ($query) => $query->where('test_type', 'pre_test'))
-                            ->orWhereDoesntHave('submissions', fn ($query) => $query->where('test_type', 'post_test'));
+                        $query->whereDoesntHave('submissions', fn ($query) => $query->where('test_type', 'pre_test')->where('status', 'completed'))
+                            ->orWhereDoesntHave('submissions', fn ($query) => $query->where('test_type', 'post_test')->where('status', 'completed'));
                     });
                 }
             });

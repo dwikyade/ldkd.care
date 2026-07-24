@@ -82,6 +82,7 @@ class ResultController extends Controller
     private function query(Request $request)
     {
         return Submission::with(['participant.school', 'participant.classroom', 'activity'])
+            ->where('status', 'completed')
             ->when($request->query('search'), function ($query, string $search) {
                 $query->whereHas('participant', function ($query) use ($search) {
                     $query->where('full_name', 'like', "%{$search}%")

@@ -22,9 +22,10 @@ class ExportController extends Controller
             'schools' => School::orderBy('name')->get(['id', 'name']),
             'summary' => [
                 'participants' => Participant::count(),
-                'submissions' => Submission::count(),
-                'pre_tests' => Submission::where('test_type', 'pre_test')->count(),
-                'post_tests' => Submission::where('test_type', 'post_test')->count(),
+                'submissions' => Submission::where('status', 'completed')->count(),
+                'draft_submissions' => Submission::where('status', 'draft')->count(),
+                'pre_tests' => Submission::where('test_type', 'pre_test')->where('status', 'completed')->count(),
+                'post_tests' => Submission::where('test_type', 'post_test')->where('status', 'completed')->count(),
             ],
         ]);
     }

@@ -6,6 +6,7 @@ import { Button } from '@/Components/ui/Button';
 import { ArrowLeft, ArrowRight, CheckCircle2, GraduationCap, User } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import ParticipantStepper from '@/Components/ldkd/ParticipantStepper';
+import BrandMark from '@/Components/ldkd/BrandMark';
 
 type Language = 'id' | 'en';
 type Role = 'student' | 'teacher';
@@ -94,7 +95,8 @@ export default function SelectRole() {
                     className="mx-auto w-full"
                 >
                     <div className="mb-10 space-y-3 text-center">
-                        <span className="inline-flex rounded-full border border-[#D9DDFF] bg-[#F1F3FF] px-3 py-1 text-xs font-bold uppercase tracking-widest text-[#5B5FEF]">
+                        <span className="inline-flex items-center gap-2 rounded-full border border-[#D9DDFF] bg-[#F1F3FF] px-3 py-1 text-xs font-bold uppercase tracking-widest text-[#5B5FEF]">
+                            <BrandMark className="h-6 w-6 rounded-lg" />
                             {mode === 'pre_test' ? t.pre : t.post}
                         </span>
                         <h1 className="font-heading text-3xl font-bold tracking-normal text-[#172033] sm:text-4xl">{t.title}</h1>

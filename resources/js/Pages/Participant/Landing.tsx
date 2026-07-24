@@ -14,7 +14,6 @@ import {
     GraduationCap,
     HelpCircle,
     LineChart,
-    LockKeyhole,
     Menu,
     Minus,
     MousePointerClick,
@@ -30,6 +29,7 @@ import {
 import type { ReactNode } from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import CloudDecor from '@/Components/ldkd/CloudDecor';
+import BrandMark from '@/Components/ldkd/BrandMark';
 
 interface Props {
     activity?: {
@@ -265,9 +265,7 @@ export default function Landing({ activity }: Props) {
                     }`}
                 >
                     <a href="#home" className="flex items-center gap-2.5">
-                        <span className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-[#5B5FEF] text-white">
-                            <ShieldCheck className="h-4 w-4" />
-                        </span>
+                        <BrandMark className="h-8 w-8 rounded-[10px]" />
                         <span className="font-heading text-base font-bold text-[#172033]">LDKD Care</span>
                     </a>
 
@@ -285,10 +283,6 @@ export default function Landing({ activity }: Props) {
                             <Globe2 className="h-4 w-4" />
                             {language.toUpperCase()}
                         </button>
-                        <Link href={route('admin.login')} aria-label={t.admin} title={t.admin} className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-[#E8ECF3]/80 bg-white/70 text-[#98A2B3] transition hover:-translate-y-0.5 hover:border-[#D9DDFF] hover:bg-white hover:text-[#5B5FEF]">
-                            <LockKeyhole className="h-4 w-4" />
-                            <span className="sr-only">{t.admin}</span>
-                        </Link>
                         <Link href={questionnaireHref} className="inline-flex h-9 items-center gap-2 rounded-xl bg-[#172033] px-4 text-xs font-bold text-white transition hover:-translate-y-0.5 hover:bg-[#5B5FEF]">
                             {language === 'id' ? 'Isi Kuesioner' : 'Questionnaire'}
                             <ArrowRight className="h-3.5 w-3.5" />
@@ -311,7 +305,10 @@ export default function Landing({ activity }: Props) {
                             className="mx-auto max-w-md rounded-3xl border border-[#E8ECF3] bg-white p-4 shadow-2xl"
                         >
                             <div className="mb-3 flex items-center justify-between">
-                                <span className="font-heading font-bold">LDKD Care</span>
+                                <span className="flex items-center gap-2.5 font-heading font-bold">
+                                    <BrandMark className="h-8 w-8 rounded-[10px]" />
+                                    LDKD Care
+                                </span>
                                 <button type="button" onClick={() => setIsMenuOpen(false)} className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#E8ECF3]" aria-label="Close menu">
                                     <X className="h-5 w-5" />
                                 </button>
@@ -323,15 +320,11 @@ export default function Landing({ activity }: Props) {
                                     </a>
                                 ))}
                             </div>
-                            <div className="mt-4 grid grid-cols-[1fr_auto] gap-2">
+                            <div className="mt-4 grid gap-2">
                                 <button type="button" onClick={() => setLanguage(language === 'id' ? 'en' : 'id')} className="rounded-xl border border-[#E8ECF3] px-3 py-3 text-sm font-bold">
                                     {language.toUpperCase()}
                                 </button>
-                                <Link href={route('admin.login')} aria-label={t.admin} title={t.admin} className="flex h-12 w-12 items-center justify-center rounded-xl border border-[#E8ECF3] text-[#98A2B3] transition hover:bg-[#F8FAFC] hover:text-[#5B5FEF]">
-                                    <LockKeyhole className="h-4 w-4" />
-                                    <span className="sr-only">{t.admin}</span>
-                                </Link>
-                                <Link href={questionnaireHref} className="col-span-2 rounded-xl bg-[#5B5FEF] px-3 py-3 text-center text-sm font-bold text-white">
+                                <Link href={questionnaireHref} className="rounded-xl bg-[#5B5FEF] px-3 py-3 text-center text-sm font-bold text-white">
                                     {t.start}
                                 </Link>
                             </div>
@@ -369,7 +362,7 @@ export default function Landing({ activity }: Props) {
                         </motion.div>
 
                         <motion.div initial={{ opacity: 0, y: reduceMotion ? 0 : 34 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: reduceMotion ? 0 : 0.75, delay: 0.25 }} className="mx-auto mt-12 max-w-5xl pb-16">
-                            <AppPreview />
+                            <AppPreview language={language} />
                         </motion.div>
                     </div>
                 </section>
@@ -563,9 +556,7 @@ export default function Landing({ activity }: Props) {
                 <div className="ldkd-container grid gap-8 text-sm text-[#667085] md:grid-cols-[1.4fr_0.8fr_0.8fr_0.8fr]">
                     <div>
                         <div className="mb-4 flex items-center gap-2.5">
-                            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#5B5FEF] text-white">
-                                <ShieldCheck className="h-5 w-5" />
-                            </span>
+                            <BrandMark className="h-9 w-9" />
                             <span className="font-heading text-lg font-bold text-[#172033]">LDKD Care</span>
                         </div>
                         <p className="max-w-sm leading-7">{t.footerInfo}</p>
@@ -587,17 +578,20 @@ export default function Landing({ activity }: Props) {
     );
 }
 
-function AppPreview() {
+function AppPreview({ language }: { language: Language }) {
+    const isId = language === 'id';
+    const navItems = isId ? ['Ringkasan', 'Hasil', 'Tips', 'Laporan'] : ['Summary', 'Results', 'Tips', 'Reports'];
+
     return (
         <div className="rounded-[28px] border border-white/75 bg-white/82 p-3 shadow-[0_32px_80px_-42px_rgba(56,104,168,0.75)] backdrop-blur">
             <div className="overflow-hidden rounded-3xl border border-[#E8ECF3] bg-white">
                 <div className="grid min-h-[360px] grid-cols-[84px_1fr] sm:grid-cols-[150px_1fr]">
                     <aside className="border-r border-[#E8ECF3] bg-[#F8FAFC] p-3 sm:p-4">
                         <div className="mb-6 flex items-center gap-2">
-                            <span className="h-7 w-7 rounded-lg bg-[#5B5FEF]" />
+                            <BrandMark className="h-7 w-7 rounded-lg" />
                             <span className="hidden text-sm font-bold text-[#172033] sm:block">LDKD</span>
                         </div>
-                        {['Ringkasan', 'Hasil', 'Tips', 'Laporan'].map((item, index) => (
+                        {navItems.map((item, index) => (
                             <div key={item} className={`mb-2 rounded-xl px-3 py-2 text-xs font-bold ${index === 0 ? 'bg-[#F1F3FF] text-[#5B5FEF]' : 'text-[#98A2B3]'}`}>
                                 {item}
                             </div>
@@ -606,15 +600,15 @@ function AppPreview() {
                     <div className="p-4 sm:p-6">
                         <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                             <div>
-                                <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#8B7CF6]">Pengisian selesai</p>
-                                <h3 className="mt-1 font-heading text-2xl font-bold text-[#172033]">Ringkasan Hasil</h3>
+                                <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#8B7CF6]">{isId ? 'Pengisian selesai' : 'Submission complete'}</p>
+                                <h3 className="mt-1 font-heading text-2xl font-bold text-[#172033]">{isId ? 'Ringkasan Hasil' : 'Result Summary'}</h3>
                             </div>
-                            <span className="w-fit rounded-full bg-[#ECFDF5] px-3 py-1 text-xs font-bold text-[#10B981]">Kategori Tinggi</span>
+                            <span className="w-fit rounded-full bg-[#ECFDF5] px-3 py-1 text-xs font-bold text-[#10B981]">{isId ? 'Kategori Tinggi' : 'High Category'}</span>
                         </div>
                         <div className="grid gap-3 sm:grid-cols-3">
                             <MiniStat title="Rizal Afandi" value="Pre-Test" />
-                            <MiniStat title="Literasi Digital" value="84%" accent="indigo" />
-                            <MiniStat title="Keamanan Digital" value="86%" accent="cyan" />
+                            <MiniStat title={isId ? 'Literasi Digital' : 'Digital Literacy'} value="84%" accent="indigo" />
+                            <MiniStat title={isId ? 'Keamanan Digital' : 'Digital Security'} value="86%" accent="cyan" />
                         </div>
                         <div className="mt-4 grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
                             <div className="rounded-2xl border border-[#E8ECF3] bg-white p-4">
@@ -634,10 +628,10 @@ function AppPreview() {
                                 <div className="mx-auto flex h-32 w-32 items-center justify-center rounded-full border-[12px] border-[#E1F3FF] border-t-[#5B5FEF] bg-white">
                                     <div>
                                         <p className="text-center font-heading text-3xl font-bold text-[#172033]">86%</p>
-                                        <p className="text-center text-xs font-bold text-[#667085]">Selesai</p>
+                                        <p className="text-center text-xs font-bold text-[#667085]">{isId ? 'Selesai' : 'Complete'}</p>
                                     </div>
                                 </div>
-                                <div className="mt-4 rounded-xl bg-white p-3 text-center text-xs font-bold text-[#667085]">Tips edukasi siap dibaca</div>
+                                <div className="mt-4 rounded-xl bg-white p-3 text-center text-xs font-bold text-[#667085]">{isId ? 'Tips edukasi siap dibaca' : 'Education tips ready'}</div>
                             </div>
                         </div>
                     </div>

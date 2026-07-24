@@ -15,14 +15,15 @@ class DashboardController extends Controller
     public function index(): Response
     {
         $completeParticipants = Participant::whereHas('submissions', function ($query) {
-            $query->where('test_type', 'pre_test');
+            $query->where('test_type', 'pre_test')->where('status', 'completed');
         })->whereHas('submissions', function ($query) {
-            $query->where('test_type', 'post_test');
+            $query->where('test_type', 'post_test')->where('status', 'completed');
         })->count();
 
         $totalParticipants = Participant::count();
 
         $averagesByTest = Submission::query()
+            ->where('status', 'completed')
             ->select('test_type')
             ->selectRaw('AVG(digital_literacy_percentage) as digital_literacy')
             ->selectRaw('AVG(data_security_percentage) as data_security')
@@ -44,6 +45,7 @@ class DashboardController extends Controller
         })->values();
 
         $recentActivities = Submission::with('participant:id,full_name')
+            ->where('status', 'completed')
             ->latest('submitted_at')
             ->limit(5)
             ->get()
@@ -57,12 +59,13 @@ class DashboardController extends Controller
         return Inertia::render('Admin/Dashboard', [
             'stats' => [
                 'total_participants' => $totalParticipants,
-                'total_pre_test' => Submission::where('test_type', 'pre_test')->count(),
-                'total_post_test' => Submission::where('test_type', 'post_test')->count(),
+                'total_pre_test' => Submission::where('test_type', 'pre_test')->where('status', 'completed')->count(),
+                'total_post_test' => Submission::where('test_type', 'post_test')->where('status', 'completed')->count(),
+                'draft_submissions' => Submission::where('status', 'draft')->count(),
                 'complete_participants' => $completeParticipants,
                 'incomplete_participants' => max($totalParticipants - $completeParticipants, 0),
-                'avg_digital_literacy' => round((float) Submission::avg('digital_literacy_percentage'), 2),
-                'avg_data_security' => round((float) Submission::avg('data_security_percentage'), 2),
+                'avg_digital_literacy' => round((float) Submission::where('status', 'completed')->avg('digital_literacy_percentage'), 2),
+                'avg_data_security' => round((float) Submission::where('status', 'completed')->avg('data_security_percentage'), 2),
                 'total_schools' => School::count(),
                 'active_activities' => Activity::where('is_active', true)->count(),
             ],

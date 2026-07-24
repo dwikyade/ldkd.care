@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Participant\IdentifyRequest;
 use App\Models\Activity;
 use App\Models\Participant;
+use App\Models\School;
+use App\Services\QuestionnaireDraftService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -13,6 +15,10 @@ use Inertia\Response;
 
 class ParticipantController extends Controller
 {
+    public function __construct(private QuestionnaireDraftService $draftService)
+    {
+    }
+
     public function identify(Request $request): Response
     {
         $language = in_array($request->query('lang'), ['id', 'en'], true)
@@ -30,6 +36,10 @@ class ParticipantController extends Controller
             'role' => $request->query('role', 'student'),
             'language' => $language,
             'activity' => $activity,
+            'schools' => School::with(['classes' => fn ($query) => $query->where('is_active', true)->orderBy('name')])
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get(['id', 'name']),
         ]);
     }
 
@@ -47,22 +57,29 @@ class ParticipantController extends Controller
             return back()->withErrors(['participant_code' => 'Kode peserta tidak ditemukan atau tidak valid untuk peran ini.']);
         }
 
-        // Check if already submitted
         $alreadySubmitted = $participant->submissions()
             ->where('test_type', $request->test_type)
+            ->where('status', 'completed')
             ->exists();
 
         if ($alreadySubmitted) {
             return back()->withErrors(['participant_code' => 'Anda sudah mengisi kuesioner ini sebelumnya.']);
         }
 
-        // Store confirmed participant in session for the next steps
+        $submission = $this->draftService->createDraft(
+            $participant,
+            $request->test_type,
+            $request->input('language', 'id'),
+        );
+
         session([
             'participant_session' => [
                 'id' => $participant->id,
                 'test_type' => $request->test_type,
                 'activity_id' => $request->activity_id,
                 'language' => $request->input('language', 'id'),
+                'submission_id' => $submission->id,
+                'submission_token' => $submission->result_token,
             ]
         ]);
 

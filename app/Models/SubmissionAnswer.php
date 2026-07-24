@@ -13,6 +13,7 @@ class SubmissionAnswer extends Model
     protected $fillable = [
         'submission_id',
         'question_id',
+        'answer_option_id',
         'question_text_snapshot',
         'option_label_snapshot',
         'weight_snapshot',
@@ -31,5 +32,10 @@ class SubmissionAnswer extends Model
     public function question(): BelongsTo
     {
         return $this->belongsTo(Question::class);
+    }
+
+    public function answerOption(): BelongsTo
+    {
+        return $this->belongsTo(AnswerOption::class);
     }
 }

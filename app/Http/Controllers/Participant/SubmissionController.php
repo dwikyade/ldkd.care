@@ -5,14 +5,11 @@ namespace App\Http\Controllers\Participant;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Participant\SubmitQuestionnaireRequest;
 use App\Models\Submission;
-use App\Models\SubmissionAnswer;
-use App\Services\ScoringService;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
+use App\Services\QuestionnaireDraftService;
 
 class SubmissionController extends Controller
 {
-    public function __construct(private ScoringService $scoringService) {}
+    public function __construct(private QuestionnaireDraftService $draftService) {}
 
     public function submit(SubmitQuestionnaireRequest $request)
     {
@@ -26,45 +23,26 @@ class SubmissionController extends Controller
             return response()->json(['message' => 'Sesi tidak valid'], 403);
         }
 
-        $exists = Submission::where('participant_id', $request->participant_id)
+        $submission = Submission::where('id', $session['submission_id'] ?? 0)
+            ->where('participant_id', $request->participant_id)
             ->where('activity_id', $request->activity_id)
             ->where('test_type', $request->test_type)
-            ->exists();
+            ->first();
 
-        if ($exists) {
+        if (! $submission) {
+            return response()->json(['message' => 'Draft pengisian tidak ditemukan. Silakan mulai ulang dari halaman kode peserta.'], 422);
+        }
+
+        if ($submission->status === 'completed') {
             return response()->json(['message' => 'Anda sudah pernah mengirim kuesioner ini.'], 422);
         }
 
         try {
-            $submission = DB::transaction(function () use ($request) {
-                $result = $this->scoringService->calculate($request->answers);
-                $token = Str::random(64);
+            if ($submission->status !== 'completed') {
+                $submission->update(['language' => $request->language]);
+            }
 
-                $submission = Submission::create([
-                    'activity_id' => $request->activity_id,
-                    'participant_id' => $request->participant_id,
-                    'result_token' => $token,
-                    'test_type' => $request->test_type,
-                    'language' => $request->language,
-                    'digital_literacy_score' => $result['digital_literacy_score'],
-                    'digital_literacy_max_score' => $result['digital_literacy_max_score'],
-                    'digital_literacy_percentage' => $result['digital_literacy_percentage'],
-                    'digital_literacy_category' => $result['digital_literacy_category'],
-                    'data_security_score' => $result['data_security_score'],
-                    'data_security_max_score' => $result['data_security_max_score'],
-                    'data_security_percentage' => $result['data_security_percentage'],
-                    'data_security_category' => $result['data_security_category'],
-                    'submitted_at' => now(),
-                ]);
-
-                foreach ($result['details'] as $detail) {
-                    $detail['submission_id'] = $submission->id;
-                    SubmissionAnswer::create($detail);
-                }
-
-                return $submission;
-            });
-            
+            $submission = $this->draftService->complete($submission, $request->answers);
             session()->forget('participant_session');
 
             return response()->json([

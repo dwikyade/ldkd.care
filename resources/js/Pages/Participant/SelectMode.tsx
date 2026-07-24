@@ -3,9 +3,10 @@ import { motion, useReducedMotion } from 'framer-motion';
 import ParticipantLayout from '@/Layouts/ParticipantLayout';
 import { Card, CardContent } from '@/Components/ui/Card';
 import { Button } from '@/Components/ui/Button';
-import { ArrowLeft, ArrowRight, CheckCircle2, Clock, History } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle2, Clock, HelpCircle, History } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import ParticipantStepper from '@/Components/ldkd/ParticipantStepper';
+import BrandMark from '@/Components/ldkd/BrandMark';
 
 type Language = 'id' | 'en';
 type TestMode = 'pre_test' | 'post_test';
@@ -17,10 +18,14 @@ const copy = {
         description: 'Pilih tahapan kuesioner yang akan Anda isi saat ini.',
         preTitle: 'Pre-Test',
         preText: 'Diisi sebelum kegiatan sosialisasi atau pelatihan dimulai untuk mengukur pemahaman awal.',
+        preBadge: 'Belum punya kode? Mulai di sini',
         postTitle: 'Post-Test',
         postText: 'Diisi setelah kegiatan selesai untuk melihat perubahan pemahaman dan dampak edukasi.',
+        postBadge: 'Sudah punya kode Pre-Test',
         continue: 'Lanjut Pilih Peran',
         helper: 'Pilih salah satu mode untuk melanjutkan.',
+        guideTitle: 'Bingung mulai dari mana?',
+        guideText: 'Jika Anda belum pernah mengisi dan belum punya kode peserta, pilih Pre-Test. Setelah Pre-Test selesai, simpan kode peserta yang muncul. Kode yang sama dipakai lagi untuk Post-Test setelah kegiatan edukasi selesai.',
     },
     en: {
         back: 'Back',
@@ -28,10 +33,14 @@ const copy = {
         description: 'Select the questionnaire stage you want to complete now.',
         preTitle: 'Pre-Test',
         preText: 'Completed before the education session to measure initial understanding.',
+        preBadge: 'No code yet? Start here',
         postTitle: 'Post-Test',
         postText: 'Completed after the session to measure learning changes and education impact.',
+        postBadge: 'Already have a Pre-Test code',
         continue: 'Continue to Role',
         helper: 'Choose one mode to continue.',
+        guideTitle: 'Not sure where to start?',
+        guideText: 'If you have never filled the questionnaire and do not have a participant code, choose Pre-Test. After completing the Pre-Test, save the participant code shown. Use the same code again for the Post-Test after the education activity.',
     },
 };
 
@@ -49,6 +58,7 @@ export default function SelectMode() {
                 value: 'pre_test' as TestMode,
                 title: t.preTitle,
                 text: t.preText,
+                badge: t.preBadge,
                 icon: Clock,
                 tone: 'indigo',
             },
@@ -56,6 +66,7 @@ export default function SelectMode() {
                 value: 'post_test' as TestMode,
                 title: t.postTitle,
                 text: t.postText,
+                badge: t.postBadge,
                 icon: History,
                 tone: 'cyan',
             },
@@ -89,9 +100,24 @@ export default function SelectMode() {
                     className="mx-auto w-full"
                 >
                     <div className="mb-10 space-y-3 text-center">
-                        <p className="inline-flex rounded-full border border-[#D9DDFF] bg-[#F1F3FF] px-3 py-1 text-sm font-bold text-[#5B5FEF]">LDKD Care</p>
+                        <p className="inline-flex items-center gap-2 rounded-full border border-[#D9DDFF] bg-[#F1F3FF] px-3 py-1 text-sm font-bold text-[#5B5FEF]">
+                            <BrandMark className="h-6 w-6 rounded-lg" />
+                            LDKD Care
+                        </p>
                         <h1 className="font-heading text-3xl font-bold tracking-normal text-[#172033] sm:text-4xl">{t.title}</h1>
                         <p className="mx-auto max-w-2xl leading-7 text-[#667085]">{t.description}</p>
+                    </div>
+
+                    <div className="mb-6 rounded-3xl border border-[#D9DDFF] bg-white/90 p-5 shadow-[0_18px_45px_-35px_rgba(91,95,239,0.45)]">
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#F1F3FF] text-[#5B5FEF]">
+                                <HelpCircle className="h-5 w-5" />
+                            </div>
+                            <div>
+                                <h2 className="font-heading text-lg font-bold text-[#172033]">{t.guideTitle}</h2>
+                                <p className="mt-2 text-sm leading-7 text-[#667085]">{t.guideText}</p>
+                            </div>
+                        </div>
                     </div>
 
                     <div className="grid gap-5 md:grid-cols-2">
@@ -121,6 +147,9 @@ export default function SelectMode() {
                                                 {isSelected && <CheckCircle2 className={`h-6 w-6 ${option.tone === 'indigo' ? 'text-indigo-600' : 'text-cyan-600'}`} />}
                                             </div>
                                             <h2 className="font-heading text-2xl font-bold text-slate-950">{option.title}</h2>
+                                            <p className={`mt-2 w-fit rounded-full px-3 py-1 text-xs font-bold ${option.tone === 'indigo' ? 'bg-[#F1F3FF] text-[#5B5FEF]' : 'bg-[#ECFEFF] text-[#0891B2]'}`}>
+                                                {option.badge}
+                                            </p>
                                             <p className="mt-3 flex-1 leading-7 text-slate-600">{option.text}</p>
                                         </CardContent>
                                     </Card>

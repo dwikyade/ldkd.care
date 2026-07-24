@@ -2,9 +2,10 @@ import { useEffect } from 'react';
 import type { FormEvent, ReactNode } from 'react';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { ArrowLeft, KeyRound, LockKeyhole, Mail, ShieldCheck, Sparkles } from 'lucide-react';
+import { ArrowLeft, KeyRound, Mail, ShieldCheck, Sparkles } from 'lucide-react';
 import { Button } from '@/Components/ui/Button';
 import CloudDecor from '@/Components/ldkd/CloudDecor';
+import BrandMark from '@/Components/ldkd/BrandMark';
 
 export default function Login() {
     const reduceMotion = useReducedMotion();
@@ -73,9 +74,7 @@ export default function Login() {
                     <div className="rounded-[28px] border border-white/80 bg-white/88 p-3 shadow-[0_32px_80px_-45px_rgba(56,104,168,0.75)] backdrop-blur">
                         <div className="overflow-hidden rounded-[24px] border border-[#E8ECF3] bg-white">
                             <div className="border-b border-[#E8ECF3] bg-[#F8FAFC] p-6 text-center">
-                                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#F1F3FF] text-[#5B5FEF]">
-                                    <LockKeyhole className="h-7 w-7" />
-                                </div>
+                                <BrandMark className="mx-auto mb-4 h-14 w-14 rounded-2xl" />
                                 <h2 className="font-heading text-2xl font-bold text-[#172033]">Akses Pengelola</h2>
                                 <p className="mt-2 text-sm leading-6 text-[#667085]">Gunakan akun admin yang sudah terdaftar.</p>
                             </div>

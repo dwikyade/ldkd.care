@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, usePage, router } from '@inertiajs/react';
 import { 
     LayoutDashboard, 
@@ -9,34 +9,85 @@ import {
     LogOut, 
     Menu,
     X,
-    ShieldCheck,
     BarChart3,
     Download,
     ClipboardList,
     Scale,
-    History
+    History,
+    Globe2
 } from 'lucide-react';
+import BrandMark from '@/Components/ldkd/BrandMark';
 
 interface Props {
     children: React.ReactNode;
 }
 
+type AdminLanguage = 'id' | 'en';
+
+const adminCopy = {
+    id: {
+        dashboard: 'Dashboard',
+        activities: 'Kegiatan',
+        schools: 'Sekolah dan Kelas',
+        participants: 'Peserta',
+        questions: 'Soal',
+        scoring: 'Bobot dan Kategori',
+        results: 'Hasil',
+        comparisons: 'Perbandingan',
+        export: 'Export',
+        audit: 'Audit Log',
+        admin: 'Administrator',
+        logout: 'Keluar',
+        closeMenu: 'Tutup menu admin',
+        openMenu: 'Buka menu admin',
+    },
+    en: {
+        dashboard: 'Dashboard',
+        activities: 'Activities',
+        schools: 'Schools and Classes',
+        participants: 'Participants',
+        questions: 'Questions',
+        scoring: 'Weights and Categories',
+        results: 'Results',
+        comparisons: 'Comparisons',
+        export: 'Export',
+        audit: 'Audit Log',
+        admin: 'Administrator',
+        logout: 'Logout',
+        closeMenu: 'Close admin menu',
+        openMenu: 'Open admin menu',
+    },
+};
+
 export default function AdminLayout({ children }: Props) {
     const { url } = usePage();
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [language, setLanguage] = useState<AdminLanguage>(() => {
+        if (typeof window === 'undefined') {
+            return 'id';
+        }
+
+        return window.localStorage.getItem('ldkd_admin_language') === 'en' ? 'en' : 'id';
+    });
+    const t = adminCopy[language];
 
     const navItems = [
-        { name: 'Dashboard', href: route('admin.dashboard'), icon: LayoutDashboard },
-        { name: 'Kegiatan', href: route('admin.activities.index'), icon: CalendarDays },
-        { name: 'Sekolah dan Kelas', href: route('admin.schools.index'), icon: School },
-        { name: 'Peserta', href: route('admin.participants.index'), icon: Users },
-        { name: 'Soal', href: route('admin.questions.index'), icon: FileQuestion },
-        { name: 'Bobot dan Kategori', href: route('admin.scoring.index'), icon: Scale },
-        { name: 'Hasil', href: route('admin.results.index'), icon: ClipboardList },
-        { name: 'Perbandingan', href: route('admin.comparisons.index'), icon: BarChart3 },
-        { name: 'Export', href: route('admin.export.index'), icon: Download },
-        { name: 'Audit Log', href: route('admin.audit-logs.index'), icon: History },
+        { name: t.dashboard, href: route('admin.dashboard'), icon: LayoutDashboard },
+        { name: t.activities, href: route('admin.activities.index'), icon: CalendarDays },
+        { name: t.schools, href: route('admin.schools.index'), icon: School },
+        { name: t.participants, href: route('admin.participants.index'), icon: Users },
+        { name: t.questions, href: route('admin.questions.index'), icon: FileQuestion },
+        { name: t.scoring, href: route('admin.scoring.index'), icon: Scale },
+        { name: t.results, href: route('admin.results.index'), icon: ClipboardList },
+        { name: t.comparisons, href: route('admin.comparisons.index'), icon: BarChart3 },
+        { name: t.export, href: route('admin.export.index'), icon: Download },
+        { name: t.audit, href: route('admin.audit-logs.index'), icon: History },
     ];
+
+    useEffect(() => {
+        window.localStorage.setItem('ldkd_admin_language', language);
+        window.dispatchEvent(new CustomEvent('ldkd-admin-language-change', { detail: language }));
+    }, [language]);
 
     const handleLogout = () => {
         router.post(route('admin.logout'));
@@ -61,9 +112,7 @@ export default function AdminLayout({ children }: Props) {
             `}>
                 <div className="flex h-16 items-center px-6">
                     <Link href="/admin/dashboard" className="flex items-center gap-2 group">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#5B5FEF] text-white shadow-sm">
-                            <ShieldCheck className="h-5 w-5" />
-                        </div>
+                        <BrandMark className="h-9 w-9 transition-transform group-hover:scale-105" />
                         <span className="font-heading text-lg font-bold text-[#172033]">
                             LDKD <span className="text-[#5B5FEF]">Admin</span>
                         </span>
@@ -71,7 +120,7 @@ export default function AdminLayout({ children }: Props) {
                     <button 
                         className="ml-auto text-[#667085] hover:text-[#172033] lg:hidden"
                         onClick={() => setSidebarOpen(false)}
-                        aria-label="Tutup menu admin"
+                        aria-label={t.closeMenu}
                     >
                         <X className="w-5 h-5" />
                     </button>
@@ -104,10 +153,10 @@ export default function AdminLayout({ children }: Props) {
                     <button 
                         onClick={handleLogout}
                         className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 font-semibold text-[#F43F5E] transition-colors hover:bg-rose-50"
-                        aria-label="Keluar dari dashboard admin"
+                        aria-label={t.logout}
                     >
                         <LogOut className="w-5 h-5 text-rose-500" />
-                        Keluar
+                        {t.logout}
                     </button>
                 </div>
             </aside>
@@ -119,14 +168,23 @@ export default function AdminLayout({ children }: Props) {
                     <button 
                         className="text-[#667085] hover:text-[#172033] lg:hidden"
                         onClick={() => setSidebarOpen(true)}
-                        aria-label="Buka menu admin"
+                        aria-label={t.openMenu}
                     >
                         <Menu className="w-6 h-6" />
                     </button>
                     
                     <div className="ml-auto flex items-center gap-4">
+                        <button
+                            type="button"
+                            onClick={() => setLanguage(language === 'id' ? 'en' : 'id')}
+                            className="inline-flex h-10 items-center gap-2 rounded-xl border border-[#E8ECF3] bg-white px-3 text-xs font-bold text-[#667085] shadow-sm transition hover:border-[#D9DDFF] hover:text-[#5B5FEF] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#5B5FEF]"
+                            aria-label="Switch admin language"
+                        >
+                            <Globe2 className="h-4 w-4" />
+                            {language.toUpperCase()}
+                        </button>
                         <div className="text-sm font-semibold text-[#667085]">
-                            Administrator
+                            {t.admin}
                         </div>
                         <div className="flex h-9 w-9 items-center justify-center rounded-full border border-[#D9DDFF] bg-[#F1F3FF] font-bold text-[#5B5FEF]">
                             A

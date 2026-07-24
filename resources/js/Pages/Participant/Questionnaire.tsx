@@ -17,12 +17,13 @@ import {
     ShieldCheck,
     Sparkles,
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import ParticipantStepper from '@/Components/ldkd/ParticipantStepper';
 
 type Language = 'id' | 'en';
 type Phase = 'instructions' | 'questions' | 'review';
 type ModuleKey = 'digital_literacy' | 'data_security';
+type SaveStatus = 'idle' | 'saving' | 'saved' | 'failed';
 
 interface AnswerOption {
     id: number;
@@ -44,6 +45,17 @@ interface Props {
     test_type: 'pre_test' | 'post_test';
     activity_id: number;
     language?: Language;
+    submission_token: string;
+    initial_answers?: Record<number, number>;
+    initial_step?: number;
+    last_saved_at?: string | null;
+    participant?: {
+        code?: string | null;
+        name?: string | null;
+        role?: 'student' | 'teacher' | null;
+        school?: string | null;
+        classroom?: string | null;
+    };
 }
 
 const copy = {
@@ -79,6 +91,12 @@ const copy = {
         complete: 'Lengkap',
         validation: 'Pilih salah satu jawaban untuk melanjutkan.',
         submitError: 'Terjadi kesalahan. Silakan coba lagi.',
+        draftReady: 'Draft siap',
+        saving: 'Menyimpan...',
+        saved: 'Tersimpan',
+        saveFailed: 'Autosave gagal. Jawaban tetap ada di perangkat ini dan akan dicoba saat Anda memilih jawaban lagi.',
+        sessionInvalid: 'Sesi pengisian tidak valid. Silakan mulai ulang dari halaman kode peserta.',
+        allRequired: 'Semua soal wajib dijawab sebelum kuesioner dikirim.',
         noQuestion: 'Belum ada soal aktif. Hubungi admin kegiatan.',
         digital_literacy: 'Literasi Digital',
         data_security: 'Keamanan Digital',
@@ -117,6 +135,12 @@ const copy = {
         complete: 'Complete',
         validation: 'Choose one answer to continue.',
         submitError: 'Something went wrong. Please try again.',
+        draftReady: 'Draft ready',
+        saving: 'Saving...',
+        saved: 'Saved',
+        saveFailed: 'Autosave failed. Your answer remains on this device and will retry when you choose another option.',
+        sessionInvalid: 'The filling session is invalid. Please start again from the participant code page.',
+        allRequired: 'All questions must be answered before submitting the questionnaire.',
         noQuestion: 'No active questions are available. Contact the activity admin.',
         digital_literacy: 'Digital Literacy',
         data_security: 'Digital Security',
@@ -125,20 +149,35 @@ const copy = {
     },
 };
 
-export default function Questionnaire({ questions, participant_id, test_type, activity_id, language: initialLanguage = 'id' }: Props) {
+export default function Questionnaire({
+    questions,
+    participant_id,
+    test_type,
+    activity_id,
+    language: initialLanguage = 'id',
+    submission_token,
+    initial_answers = {},
+    initial_step = 0,
+    last_saved_at = null,
+    participant,
+}: Props) {
     const reduceMotion = useReducedMotion();
     const [language, setLanguage] = useState<Language>(initialLanguage);
-    const [phase, setPhase] = useState<Phase>('instructions');
+    const [phase, setPhase] = useState<Phase>(Object.keys(initial_answers || {}).length > 0 ? 'questions' : 'instructions');
     const [currentStep, setCurrentStep] = useState(0);
-    const [answers, setAnswers] = useState<Record<number, number>>({});
+    const [answers, setAnswers] = useState<Record<number, number>>(() => normalizeAnswerMap(initial_answers));
     const [hasAgreed, setHasAgreed] = useState(false);
     const [validationError, setValidationError] = useState<string | null>(null);
     const [submitError, setSubmitError] = useState<string | null>(null);
     const [finalConfirmed, setFinalConfirmed] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSubmitted, setIsSubmitted] = useState(false);
+    const [saveStatus, setSaveStatus] = useState<SaveStatus>(last_saved_at ? 'saved' : 'idle');
+    const [lastSavedAt, setLastSavedAt] = useState<string | null>(last_saved_at);
+    const pendingSaveRef = useRef<{ questionId: number; optionId: number; currentStep?: string | null } | null>(null);
+    const saveTimerRef = useRef<number | null>(null);
     const t = copy[language];
-    const storageKey = `ldkd-care:${activity_id}:${participant_id}:${test_type}`;
+    const storageKey = `ldkd-care:${activity_id}:${participant_id}:${test_type}:${submission_token}`;
 
     const moduleQuestions = useMemo(
         () => ({
@@ -159,30 +198,16 @@ export default function Questionnaire({ questions, participant_id, test_type, ac
     const progressPercentage = allQuestions.length > 0 ? Math.round((answeredCount / allQuestions.length) * 100) : 0;
 
     useEffect(() => {
-        const saved = window.localStorage.getItem(storageKey);
+        const serverAnswers = normalizeAnswerMap(initial_answers);
+        const safeStep = Math.min(Math.max(initial_step || 0, 0), Math.max(allQuestions.length - 1, 0));
 
-        if (!saved) {
-            return;
-        }
-
-        try {
-            const parsed = JSON.parse(saved) as {
-                answers?: Record<number, number>;
-                currentStep?: number;
-                phase?: Phase;
-                language?: Language;
-                hasAgreed?: boolean;
-            };
-
-            setAnswers(parsed.answers || {});
-            setCurrentStep(Math.min(parsed.currentStep || 0, Math.max(allQuestions.length - 1, 0)));
-            setPhase(parsed.phase || 'instructions');
-            setLanguage(parsed.language || initialLanguage);
-            setHasAgreed(Boolean(parsed.hasAgreed));
-        } catch {
-            window.localStorage.removeItem(storageKey);
-        }
-    }, [allQuestions.length, initialLanguage, storageKey]);
+        setAnswers(serverAnswers);
+        setCurrentStep(safeStep);
+        setPhase(Object.keys(serverAnswers).length > 0 ? 'questions' : 'instructions');
+        setLanguage(initialLanguage);
+        setLastSavedAt(last_saved_at);
+        setSaveStatus(last_saved_at ? 'saved' : 'idle');
+    }, [allQuestions.length, initialLanguage, initial_answers, initial_step, last_saved_at, submission_token]);
 
     useEffect(() => {
         window.localStorage.setItem(
@@ -197,6 +222,14 @@ export default function Questionnaire({ questions, participant_id, test_type, ac
         );
     }, [answers, currentStep, phase, language, hasAgreed, storageKey]);
 
+    useEffect(() => {
+        return () => {
+            if (saveTimerRef.current) {
+                window.clearTimeout(saveTimerRef.current);
+            }
+        };
+    }, []);
+
     const pageTransition = {
         initial: { opacity: 0, x: reduceMotion ? 0 : 20 },
         animate: { opacity: 1, x: 0 },
@@ -204,15 +237,91 @@ export default function Questionnaire({ questions, participant_id, test_type, ac
         transition: { duration: reduceMotion ? 0 : 0.25 },
     };
 
+    const moduleForStep = (step: number, nextPhase: Phase = 'questions') => {
+        if (nextPhase === 'instructions' || nextPhase === 'review') {
+            return nextPhase;
+        }
+
+        return allQuestions[step]?.module || 'digital_literacy';
+    };
+
+    const persistProgress = (step: number, nextPhase: Phase = 'questions') => {
+        const question = nextPhase === 'questions' ? allQuestions[step] : null;
+
+        axios
+            .patch(route('participant.questionnaire.progress', submission_token), {
+                current_step: moduleForStep(step, nextPhase),
+                current_question_id: question?.id ?? null,
+            })
+            .then((response) => {
+                setLastSavedAt(response.data.saved_at || null);
+            })
+            .catch(() => {
+                setSaveStatus('failed');
+            });
+    };
+
+    const flushPendingSave = async () => {
+        const pending = pendingSaveRef.current;
+
+        if (!pending) {
+            return;
+        }
+
+        if (saveTimerRef.current) {
+            window.clearTimeout(saveTimerRef.current);
+            saveTimerRef.current = null;
+        }
+
+        pendingSaveRef.current = null;
+        setSaveStatus('saving');
+
+        try {
+            const response = await axios.post(route('participant.questionnaire.answers', submission_token), {
+                question_id: pending.questionId,
+                answer_option_id: pending.optionId,
+                current_step: pending.currentStep,
+            });
+
+            setSaveStatus('saved');
+            setLastSavedAt(response.data.saved_at || null);
+        } catch {
+            pendingSaveRef.current = pending;
+            setSaveStatus('failed');
+        }
+    };
+
+    const scheduleAnswerSave = (questionId: number, optionId: number) => {
+        const question = allQuestions.find((item) => item.id === questionId);
+
+        pendingSaveRef.current = {
+            questionId,
+            optionId,
+            currentStep: question?.module || moduleForStep(currentStep),
+        };
+        setSaveStatus('saving');
+
+        if (saveTimerRef.current) {
+            window.clearTimeout(saveTimerRef.current);
+        }
+
+        saveTimerRef.current = window.setTimeout(() => {
+            void flushPendingSave();
+        }, 420);
+    };
+
     const handleSelectOption = (questionId: number, optionId: number) => {
         setAnswers((current) => ({ ...current, [questionId]: optionId }));
         setValidationError(null);
+        setSubmitError(null);
+        scheduleAnswerSave(questionId, optionId);
     };
 
     const goToQuestion = (index: number) => {
         setCurrentStep(index);
         setPhase('questions');
         setValidationError(null);
+        persistProgress(index, 'questions');
     };
 
     const handleNext = () => {
@@ -223,21 +332,26 @@ export default function Questionnaire({ questions, participant_id, test_type, ac
 
         if (currentStep === allQuestions.length - 1) {
             setPhase('review');
+            persistProgress(currentStep, 'review');
             return;
         }
 
-        setCurrentStep((step) => step + 1);
+        const nextStep = currentStep + 1;
+        setCurrentStep(nextStep);
         setValidationError(null);
+        persistProgress(nextStep, 'questions');
     };
 
     const handlePrev = () => {
         if (currentStep > 0) {
-            setCurrentStep((step) => step - 1);
+            const nextStep = currentStep - 1;
+            setCurrentStep(nextStep);
+            persistProgress(nextStep, 'questions');
         }
         setValidationError(null);
     };
 
-    const submit = () => {
+    const submit = async () => {
         if (missingQuestions.length > 0) {
             goToQuestion(allQuestions.findIndex((question) => question.id === missingQuestions[0].id));
             return;
@@ -246,13 +360,12 @@ export default function Questionnaire({ questions, participant_id, test_type, ac
         setIsSubmitting(true);
         setSubmitError(null);
 
+        await flushPendingSave();
+
         axios
-            .post(route('participant.submit'), {
-                participant_id,
-                test_type,
-                activity_id,
-                language,
+            .post(route('participant.questionnaire.complete', submission_token), {
                 answers,
+                language,
             })
             .then((res: any) => {
                 if (res.data.success && res.data.redirect) {
@@ -262,7 +375,7 @@ export default function Questionnaire({ questions, participant_id, test_type, ac
                 }
             })
             .catch((error: any) => {
-                setSubmitError(error.response?.data?.message || t.submitError);
+                setSubmitError(readAxiosError(error, t.submitError, language, t));
                 setIsSubmitting(false);
             });
     };
@@ -314,6 +427,13 @@ export default function Questionnaire({ questions, participant_id, test_type, ac
                                         {t.estimated}
                                     </span>
                                 </div>
+                                {participant && (
+                                    <div className="mt-6 inline-flex flex-wrap items-center gap-2 rounded-2xl border border-[#E8ECF3] bg-[#F8FAFC] px-4 py-3 text-sm font-semibold text-[#667085]">
+                                        <span className="text-[#172033]">{participant.name || 'Peserta'}</span>
+                                        {participant.code && <span className="font-mono text-[#5B5FEF]">{participant.code}</span>}
+                                        {participant.school && <span>{participant.school}</span>}
+                                    </div>
+                                )}
                             </div>
                         </div>
 
@@ -367,6 +487,11 @@ export default function Questionnaire({ questions, participant_id, test_type, ac
                                     </div>
                                 </div>
                             )}
+
+                            <div className={`mt-4 flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-semibold ${saveStatusClass(saveStatus)}`}>
+                                {saveStatus === 'saving' ? <Loader2 className="h-4 w-4 animate-spin" /> : saveStatus === 'failed' ? <AlertTriangle className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
+                                <span>{saveStatusText(saveStatus, t, lastSavedAt)}</span>
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -441,7 +566,15 @@ export default function Questionnaire({ questions, participant_id, test_type, ac
                                     </label>
 
                                     <div className="mt-8 flex justify-end">
-                                        <Button size="lg" disabled={!hasAgreed} onClick={() => setPhase('questions')} className="gap-2">
+                                        <Button
+                                            size="lg"
+                                            disabled={!hasAgreed}
+                                            onClick={() => {
+                                                setPhase('questions');
+                                                persistProgress(currentStep, 'questions');
+                                            }}
+                                            className="gap-2"
+                                        >
                                             {t.start}
                                             <ArrowRight className="h-4 w-4" />
                                         </Button>
@@ -602,7 +735,14 @@ export default function Questionnaire({ questions, participant_id, test_type, ac
                                     </label>
 
                                     <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
-                                        <Button variant="ghost" onClick={() => setPhase('questions')} disabled={isSubmitting}>
+                                        <Button
+                                            variant="ghost"
+                                            onClick={() => {
+                                                setPhase('questions');
+                                                persistProgress(currentStep, 'questions');
+                                            }}
+                                            disabled={isSubmitting}
+                                        >
                                             <ArrowLeft className="mr-2 h-4 w-4" />
                                             {t.prev}
                                         </Button>
@@ -625,4 +765,73 @@ export default function Questionnaire({ questions, participant_id, test_type, ac
             </div>
         </ParticipantLayout>
     );
+}
+
+function normalizeAnswerMap(value: Record<number, number> | Record<string, number> | undefined): Record<number, number> {
+    return Object.entries(value || {}).reduce<Record<number, number>>((result, [questionId, optionId]) => {
+        result[Number(questionId)] = Number(optionId);
+
+        return result;
+    }, {});
+}
+
+function readAxiosError(error: unknown, fallback: string, language: Language, t: typeof copy.id): string {
+    if (!axios.isAxiosError(error)) {
+        return fallback;
+    }
+
+    const errors = error.response?.data?.errors;
+    const first = errors ? Object.values(errors)[0] : null;
+
+    if (Array.isArray(first) && typeof first[0] === 'string') {
+        return translateQuestionnaireError(first[0], language, t);
+    }
+
+    return translateQuestionnaireError(error.response?.data?.message || fallback, language, t);
+}
+
+function translateQuestionnaireError(message: string, language: Language, t: typeof copy.id): string {
+    if (language === 'id') {
+        return message;
+    }
+
+    const map: Record<string, string> = {
+        'Semua soal wajib dijawab sebelum kuesioner dikirim.': t.allRequired,
+        'Sesi pengisian tidak valid. Silakan mulai ulang dari halaman kode peserta.': t.sessionInvalid,
+        'Sesi tidak valid': t.sessionInvalid,
+        'Draft pengisian tidak ditemukan. Silakan mulai ulang dari halaman kode peserta.': t.sessionInvalid,
+        'Anda sudah pernah mengirim kuesioner ini.': 'You have already submitted this questionnaire.',
+        'Kuesioner ini sudah selesai dan tidak dapat diubah.': 'This questionnaire is already complete and cannot be changed.',
+    };
+
+    return map[message] || message;
+}
+
+function saveStatusClass(status: SaveStatus): string {
+    const map: Record<SaveStatus, string> = {
+        idle: 'border-white/10 bg-white/5 text-slate-300',
+        saving: 'border-sky-400/20 bg-sky-400/10 text-sky-100',
+        saved: 'border-emerald-400/20 bg-emerald-400/10 text-emerald-100',
+        failed: 'border-amber-400/30 bg-amber-400/10 text-amber-100',
+    };
+
+    return map[status];
+}
+
+function saveStatusText(status: SaveStatus, t: typeof copy.id, lastSavedAt: string | null): string {
+    if (status === 'saving') {
+        return t.saving;
+    }
+
+    if (status === 'failed') {
+        return t.saveFailed;
+    }
+
+    if (status === 'saved') {
+        const time = lastSavedAt ? new Date(lastSavedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null;
+
+        return time ? `${t.saved} ${time}` : t.saved;
+    }
+
+    return t.draftReady;
 }

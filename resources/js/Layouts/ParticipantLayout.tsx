@@ -1,7 +1,8 @@
 import React from 'react';
 import { Link } from '@inertiajs/react';
-import { ArrowRight, ShieldCheck } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import CloudDecor from '@/Components/ldkd/CloudDecor';
+import BrandMark from '@/Components/ldkd/BrandMark';
 
 interface Props {
     children: React.ReactNode;
@@ -14,9 +15,7 @@ export default function ParticipantLayout({ children }: Props) {
             <header className="sticky top-3 z-40 w-full px-4">
                 <div className="mx-auto flex h-14 max-w-[1120px] items-center justify-between rounded-2xl border border-white/80 bg-white/88 px-4 shadow-[0_16px_40px_-34px_rgba(23,32,51,0.45)] backdrop-blur-xl sm:px-5">
                     <Link href="/" className="group flex items-center gap-3">
-                        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#5B5FEF] text-white shadow-sm transition-transform group-hover:scale-105">
-                            <ShieldCheck className="h-5 w-5" />
-                        </span>
+                        <BrandMark className="h-9 w-9 transition-transform group-hover:scale-105" />
                         <span className="font-heading text-lg font-bold tracking-tight text-[#172033]">
                             LDKD <span className="text-[#5B5FEF]">Care</span>
                         </span>
