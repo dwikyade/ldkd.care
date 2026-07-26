@@ -63,6 +63,16 @@ export interface Paginated<T> {
 export interface SubmissionResult {
     id: number;
     test_type: 'pre_test' | 'post_test';
+    digital_skill_score?: number | string;
+    digital_ethics_score?: number | string;
+    digital_safety_score?: number | string;
+    digital_culture_score?: number | string;
+    literacy_score?: number | string;
+    security_score?: number | string;
+    total_index?: number | string;
+    literacy_category?: string | null;
+    security_category?: string | null;
+    total_category?: string | null;
     digital_literacy_percentage: number | string;
     digital_literacy_category: string;
     data_security_percentage: number | string;
@@ -74,7 +84,7 @@ export interface SubmissionResult {
 
 export interface CategoryThreshold {
     id: number;
-    module: 'digital_literacy' | 'data_security';
+    module: 'digital_literacy' | 'data_security' | 'digital_skill' | 'digital_ethics' | 'digital_safety' | 'digital_culture' | 'total_index';
     category: 'low' | 'medium' | 'high';
     minimum_percentage: number | string;
     maximum_percentage: number | string;
@@ -119,9 +129,36 @@ export interface AnswerOption {
     is_active?: boolean;
 }
 
+export interface QuestionnaireVersion {
+    id: number;
+    name: string;
+    code: string;
+    status: 'active' | 'draft' | 'archived' | string;
+}
+
+export interface ResponseScale {
+    id: number;
+    code: string;
+    name_id: string;
+    name_en?: string | null;
+    scale_type: string;
+}
+
 export interface Question {
     id: number;
     module: 'digital_literacy' | 'data_security';
+    questionnaire_version_id?: number | null;
+    questionnaire_version?: QuestionnaireVersion | null;
+    kominfo_pillar?: 'digital_skill' | 'digital_ethics' | 'digital_safety' | 'digital_culture' | null;
+    question_type?: string | null;
+    response_scale_id?: number | null;
+    response_scale?: ResponseScale | null;
+    assessment_type?: string | null;
+    difficulty_level?: string | null;
+    proficiency_level?: string | null;
+    unesco_competence_code?: string | null;
+    is_reverse?: boolean;
+    included_in_score?: boolean;
     text_id: string;
     text_en?: string | null;
     display_order?: number;

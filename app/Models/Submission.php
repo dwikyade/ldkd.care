@@ -14,6 +14,7 @@ class Submission extends Model
     protected $fillable = [
         'activity_id',
         'participant_id',
+        'questionnaire_version_id',
         'result_token',
         'test_type',
         'language',
@@ -26,6 +27,17 @@ class Submission extends Model
         'data_security_max_score',
         'data_security_percentage',
         'data_security_category',
+        'digital_skill_score',
+        'digital_ethics_score',
+        'digital_safety_score',
+        'digital_culture_score',
+        'literacy_score',
+        'security_score',
+        'total_index',
+        'knowledge_score',
+        'literacy_category',
+        'security_category',
+        'total_category',
         'submitted_at',
         'current_step',
         'current_question_id',
@@ -41,6 +53,14 @@ class Submission extends Model
         'data_security_score' => 'decimal:2',
         'data_security_max_score' => 'decimal:2',
         'data_security_percentage' => 'decimal:2',
+        'digital_skill_score' => 'decimal:2',
+        'digital_ethics_score' => 'decimal:2',
+        'digital_safety_score' => 'decimal:2',
+        'digital_culture_score' => 'decimal:2',
+        'literacy_score' => 'decimal:2',
+        'security_score' => 'decimal:2',
+        'total_index' => 'decimal:2',
+        'knowledge_score' => 'decimal:2',
         'submitted_at' => 'datetime',
         'started_at' => 'datetime',
         'last_activity_at' => 'datetime',
@@ -55,6 +75,11 @@ class Submission extends Model
     public function participant(): BelongsTo
     {
         return $this->belongsTo(Participant::class);
+    }
+
+    public function questionnaireVersion(): BelongsTo
+    {
+        return $this->belongsTo(QuestionnaireVersion::class);
     }
 
     public function answers(): HasMany

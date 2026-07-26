@@ -57,10 +57,10 @@ export default function Index({ results, filters, activities, schools, summary }
                     <p className="mt-1 text-[#667085]">Pantau skor literasi digital dan keamanan digital dari pre-test maupun post-test.</p>
                 </div>
                 <Button asChild className="gap-2">
-                    <Link href={route('admin.results.export', filterForm.data)}>
+                    <a href={route('admin.results.export', filterForm.data)}>
                         <Download className="h-4 w-4" />
                         Export CSV
-                    </Link>
+                    </a>
                 </Button>
             </div>
 

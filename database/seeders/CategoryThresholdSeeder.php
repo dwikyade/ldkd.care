@@ -9,12 +9,20 @@ class CategoryThresholdSeeder extends Seeder
 {
     public function run(): void
     {
-        $modules = ['digital_literacy', 'data_security'];
+        $modules = [
+            'digital_literacy',
+            'data_security',
+            'digital_skill',
+            'digital_ethics',
+            'digital_safety',
+            'digital_culture',
+            'total_index',
+        ];
         
         $thresholds = [
-            ['category' => 'low', 'minimum_percentage' => 0, 'maximum_percentage' => 49.99],
-            ['category' => 'medium', 'minimum_percentage' => 50, 'maximum_percentage' => 74.99],
-            ['category' => 'high', 'minimum_percentage' => 75, 'maximum_percentage' => 100],
+            ['category' => 'low', 'minimum_percentage' => 1, 'maximum_percentage' => 2.33],
+            ['category' => 'medium', 'minimum_percentage' => 2.34, 'maximum_percentage' => 3.66],
+            ['category' => 'high', 'minimum_percentage' => 3.67, 'maximum_percentage' => 5],
         ];
 
         foreach ($modules as $module) {

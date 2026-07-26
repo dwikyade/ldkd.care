@@ -78,10 +78,10 @@ export default function Index({ comparisons, filters, activities, schools, summa
                     <p className="mt-1 text-[#667085]">Bandingkan peningkatan literasi digital dan keamanan digital berdasarkan kode peserta yang sama.</p>
                 </div>
                 <Button asChild className="gap-2">
-                    <Link href={route('admin.comparisons.export', filterForm.data)}>
+                    <a href={route('admin.comparisons.export', filterForm.data)}>
                         <Download className="h-4 w-4" />
                         Export CSV
-                    </Link>
+                    </a>
                 </Button>
             </div>
 

@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\AnswerOption;
 use App\Models\Participant;
 use App\Models\Question;
+use App\Models\QuestionnaireVersion;
 use App\Models\Submission;
 use App\Models\SubmissionAnswer;
 use Illuminate\Support\Facades\DB;
@@ -19,13 +20,16 @@ class QuestionnaireDraftService
 
     public function createDraft(Participant $participant, string $testType, string $language = 'id'): Submission
     {
-        return Submission::firstOrCreate(
+        $version = QuestionnaireVersion::active();
+
+        $submission = Submission::firstOrCreate(
             [
                 'activity_id' => $participant->activity_id,
                 'participant_id' => $participant->id,
                 'test_type' => $testType,
             ],
             [
+                'questionnaire_version_id' => $version?->id,
                 'result_token' => Str::random(64),
                 'language' => $language,
                 'status' => 'draft',
@@ -33,6 +37,12 @@ class QuestionnaireDraftService
                 'last_activity_at' => now(),
             ],
         );
+
+        if (! $submission->questionnaire_version_id && $version && $submission->status !== 'completed' && ! $submission->answers()->exists()) {
+            $submission->update(['questionnaire_version_id' => $version->id]);
+        }
+
+        return $submission->fresh();
     }
 
     public function saveAnswer(Submission $submission, int $questionId, int $answerOptionId, ?string $currentStep = null): SubmissionAnswer
@@ -43,7 +53,11 @@ class QuestionnaireDraftService
             ]);
         }
 
-        $question = Question::where('is_active', true)->findOrFail($questionId);
+        $versionId = $this->resolveVersionId($submission);
+        $question = Question::with(['responseScale', 'competencies'])
+            ->where('is_active', true)
+            ->when($versionId, fn ($query) => $query->where('questionnaire_version_id', $versionId))
+            ->findOrFail($questionId);
         $answerOption = AnswerOption::where('is_active', true)
             ->where('question_id', $question->id)
             ->findOrFail($answerOptionId);
@@ -59,6 +73,19 @@ class QuestionnaireDraftService
                 'option_label_snapshot' => $answerOption->label_id,
                 'weight_snapshot' => $answerOption->weight,
                 'module' => $question->module,
+                'kominfo_pillar' => $this->pillarFor($question),
+                'question_type' => $question->question_type,
+                'assessment_type' => $question->assessment_type,
+                'response_scale_code' => $question->responseScale?->code,
+                'competency_snapshot' => $question->competencies
+                    ->map(fn ($competency) => [
+                        'framework' => $competency->framework,
+                        'code' => $competency->code,
+                        'name' => $competency->name,
+                    ])
+                    ->values()
+                    ->toJson(),
+                'included_in_score' => (bool) $question->included_in_score,
             ],
         );
 
@@ -104,7 +131,8 @@ class QuestionnaireDraftService
                 $this->saveManyAnswers($submission, $incomingAnswers);
             }
 
-            $questions = Question::where('is_active', true)->pluck('id');
+            $versionId = $this->resolveVersionId($submission);
+            $questions = $this->questionQuery($versionId)->pluck('id');
             $answers = SubmissionAnswer::where('submission_id', $submission->id)
                 ->whereIn('question_id', $questions)
                 ->pluck('answer_option_id', 'question_id')
@@ -120,9 +148,21 @@ class QuestionnaireDraftService
                 ]);
             }
 
-            $result = $this->scoringService->calculate($answers);
+            $result = $this->scoringService->calculate($answers, $versionId);
 
             $submission->update([
+                'questionnaire_version_id' => $versionId,
+                'digital_skill_score' => $result['digital_skill_score'],
+                'digital_ethics_score' => $result['digital_ethics_score'],
+                'digital_safety_score' => $result['digital_safety_score'],
+                'digital_culture_score' => $result['digital_culture_score'],
+                'literacy_score' => $result['literacy_score'],
+                'security_score' => $result['security_score'],
+                'total_index' => $result['total_index'],
+                'knowledge_score' => $result['knowledge_score'],
+                'literacy_category' => $result['literacy_category'],
+                'security_category' => $result['security_category'],
+                'total_category' => $result['total_category'],
                 'digital_literacy_score' => $result['digital_literacy_score'],
                 'digital_literacy_max_score' => $result['digital_literacy_max_score'],
                 'digital_literacy_percentage' => $result['digital_literacy_percentage'],
@@ -143,8 +183,12 @@ class QuestionnaireDraftService
 
     public function progress(Submission $submission): array
     {
-        $total = Question::where('is_active', true)->count();
-        $answered = $submission->answers()->distinct('question_id')->count('question_id');
+        $questionIds = $this->questionQuery($this->resolveVersionId($submission))->pluck('id');
+        $total = $questionIds->count();
+        $answered = $submission->answers()
+            ->whereIn('question_id', $questionIds)
+            ->distinct('question_id')
+            ->count('question_id');
 
         return [
             'answered' => $answered,
@@ -158,10 +202,50 @@ class QuestionnaireDraftService
 
     public function answerMap(Submission $submission): array
     {
+        $questionIds = $this->questionQuery($this->resolveVersionId($submission))->pluck('id');
+
         return $submission->answers()
+            ->whereIn('question_id', $questionIds)
             ->whereNotNull('answer_option_id')
             ->pluck('answer_option_id', 'question_id')
             ->map(fn ($value) => (int) $value)
             ->all();
+    }
+
+    private function resolveVersionId(Submission $submission): ?int
+    {
+        if ($submission->questionnaire_version_id) {
+            return (int) $submission->questionnaire_version_id;
+        }
+
+        $version = QuestionnaireVersion::active();
+
+        if ($version && $submission->status !== 'completed' && ! $submission->answers()->exists()) {
+            $submission->update(['questionnaire_version_id' => $version->id]);
+
+            return $version->id;
+        }
+
+        return $version?->id;
+    }
+
+    private function questionQuery(?int $versionId)
+    {
+        return Question::where('is_active', true)
+            ->when($versionId, fn ($query) => $query->where('questionnaire_version_id', $versionId))
+            ->orderBy('display_order');
+    }
+
+    private function pillarFor(Question $question): ?string
+    {
+        if (in_array($question->kominfo_pillar, ['digital_skill', 'digital_ethics', 'digital_safety', 'digital_culture'], true)) {
+            return $question->kominfo_pillar;
+        }
+
+        return match ($question->module) {
+            'data_security' => 'digital_safety',
+            'digital_literacy' => 'digital_skill',
+            default => null,
+        };
     }
 }

@@ -38,6 +38,7 @@ class ExportController extends Controller
 
         return response()->streamDownload(function () use ($request) {
             $output = fopen('php://output', 'w');
+            fwrite($output, "\xEF\xBB\xBF");
             fputcsv($output, [
                 'Kode Peserta',
                 'Nama',

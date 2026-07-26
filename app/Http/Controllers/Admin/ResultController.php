@@ -41,17 +41,28 @@ class ResultController extends Controller
 
         return response()->streamDownload(function () use ($request) {
             $output = fopen('php://output', 'w');
+            fwrite($output, "\xEF\xBB\xBF");
             fputcsv($output, [
                 'Kode Peserta',
                 'Nama',
                 'Peran',
                 'Sekolah',
                 'Kelas',
+                'Kegiatan',
                 'Jenis Tes',
-                'Literasi Digital (%)',
+                'Versi Instrumen',
+                'Digital Skill (1-5)',
+                'Digital Ethics (1-5)',
+                'Digital Safety (1-5)',
+                'Digital Culture (1-5)',
+                'Skor Literasi (1-5)',
                 'Kategori Literasi',
-                'Keamanan Digital (%)',
+                'Skor Keamanan (1-5)',
                 'Kategori Keamanan',
+                'Total Index (1-5)',
+                'Kategori Total',
+                'Literasi Digital (%)',
+                'Keamanan Digital (%)',
                 'Tanggal Submit',
             ]);
 
@@ -65,11 +76,21 @@ class ResultController extends Controller
                             $submission->participant?->role,
                             $submission->participant?->school?->name,
                             $submission->participant?->classroom?->name,
+                            $submission->activity?->name,
                             $submission->test_type,
+                            $submission->questionnaireVersion?->code,
+                            $submission->digital_skill_score,
+                            $submission->digital_ethics_score,
+                            $submission->digital_safety_score,
+                            $submission->digital_culture_score,
+                            $submission->literacy_score ?: $this->scoreFromPercentage($submission->digital_literacy_percentage),
+                            $submission->literacy_category ?: $submission->digital_literacy_category,
+                            $submission->security_score ?: $this->scoreFromPercentage($submission->data_security_percentage),
+                            $submission->security_category ?: $submission->data_security_category,
+                            $submission->total_index,
+                            $submission->total_category,
                             $submission->digital_literacy_percentage,
-                            $submission->digital_literacy_category,
                             $submission->data_security_percentage,
-                            $submission->data_security_category,
                             optional($submission->submitted_at)->format('Y-m-d H:i:s'),
                         ]);
                     }
@@ -81,7 +102,7 @@ class ResultController extends Controller
 
     private function query(Request $request)
     {
-        return Submission::with(['participant.school', 'participant.classroom', 'activity'])
+        return Submission::with(['participant.school', 'participant.classroom', 'activity', 'questionnaireVersion'])
             ->where('status', 'completed')
             ->when($request->query('search'), function ($query, string $search) {
                 $query->whereHas('participant', function ($query) use ($search) {
@@ -94,5 +115,10 @@ class ResultController extends Controller
             ->when($request->query('school_id'), function ($query, $schoolId) {
                 $query->whereHas('participant', fn ($query) => $query->where('school_id', $schoolId));
             });
+    }
+
+    private function scoreFromPercentage(float|string|null $percentage): float
+    {
+        return round(((float) $percentage) / 20, 2);
     }
 }

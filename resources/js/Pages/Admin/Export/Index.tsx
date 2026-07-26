@@ -1,4 +1,4 @@
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, useForm } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Button } from '@/Components/ui/Button';
 import { Card, CardContent } from '@/Components/ui/Card';
@@ -161,10 +161,10 @@ function ExportCard({ title, description, icon, href, highlighted = false }: { t
                 <h2 className="font-heading text-xl font-bold text-[#172033]">{title}</h2>
                 <p className="mt-3 flex-1 leading-7 text-[#667085]">{description}</p>
                 <Button asChild className="mt-6 gap-2">
-                    <Link href={href}>
+                    <a href={href}>
                         <Download className="h-4 w-4" />
                         Unduh CSV
-                    </Link>
+                    </a>
                 </Button>
             </CardContent>
         </Card>

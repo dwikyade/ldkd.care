@@ -12,7 +12,7 @@ class ResultController extends Controller
 {
     public function show(string $token): Response|\Illuminate\Http\RedirectResponse
     {
-        $submission = Submission::with(['participant.school', 'participant.classroom'])
+        $submission = Submission::with(['participant.school', 'participant.classroom', 'questionnaireVersion'])
             ->where('result_token', $token)
             ->where('status', 'completed')
             ->first();
@@ -58,27 +58,74 @@ class ResultController extends Controller
             return null;
         }
 
-        $digitalLiteracyDiff = round((float) $submission->digital_literacy_percentage - (float) $preTest->digital_literacy_percentage, 2);
-        $dataSecurityDiff = round((float) $submission->data_security_percentage - (float) $preTest->data_security_percentage, 2);
+        $digitalLiteracyDiff = round($this->scoreValue($submission, 'literacy_score', 'digital_literacy_percentage') - $this->scoreValue($preTest, 'literacy_score', 'digital_literacy_percentage'), 2);
+        $dataSecurityDiff = round($this->scoreValue($submission, 'security_score', 'data_security_percentage') - $this->scoreValue($preTest, 'security_score', 'data_security_percentage'), 2);
+        $totalIndexDiff = round($this->scoreValue($submission, 'total_index') - $this->scoreValue($preTest, 'total_index'), 2);
 
         return [
             'digital_literacy' => [
-                'pre' => round((float) $preTest->digital_literacy_percentage, 2),
-                'post' => round((float) $submission->digital_literacy_percentage, 2),
+                'pre' => $this->scoreValue($preTest, 'literacy_score', 'digital_literacy_percentage'),
+                'post' => $this->scoreValue($submission, 'literacy_score', 'digital_literacy_percentage'),
                 'diff' => $digitalLiteracyDiff,
                 'pre_category' => $preTest->digital_literacy_category,
                 'post_category' => $submission->digital_literacy_category,
             ],
             'data_security' => [
-                'pre' => round((float) $preTest->data_security_percentage, 2),
-                'post' => round((float) $submission->data_security_percentage, 2),
+                'pre' => $this->scoreValue($preTest, 'security_score', 'data_security_percentage'),
+                'post' => $this->scoreValue($submission, 'security_score', 'data_security_percentage'),
                 'diff' => $dataSecurityDiff,
                 'pre_category' => $preTest->data_security_category,
                 'post_category' => $submission->data_security_category,
             ],
-            'average_diff' => round(($digitalLiteracyDiff + $dataSecurityDiff) / 2, 2),
+            'pillars' => [
+                'digital_skill' => $this->comparisonMetric($preTest, $submission, 'digital_skill_score'),
+                'digital_ethics' => $this->comparisonMetric($preTest, $submission, 'digital_ethics_score'),
+                'digital_safety' => $this->comparisonMetric($preTest, $submission, 'digital_safety_score'),
+                'digital_culture' => $this->comparisonMetric($preTest, $submission, 'digital_culture_score'),
+            ],
+            'total_index' => [
+                'pre' => $this->scoreValue($preTest, 'total_index'),
+                'post' => $this->scoreValue($submission, 'total_index'),
+                'diff' => $totalIndexDiff,
+                'pre_category' => $preTest->total_category ?: $preTest->digital_literacy_category,
+                'post_category' => $submission->total_category ?: $submission->digital_literacy_category,
+            ],
+            'average_diff' => $totalIndexDiff,
             'pre_submitted_at' => optional($preTest->submitted_at)->toIso8601String(),
             'post_submitted_at' => optional($submission->submitted_at)->toIso8601String(),
         ];
+    }
+
+    private function comparisonMetric(Submission $preTest, Submission $postTest, string $scoreField): array
+    {
+        $pre = $this->scoreValue($preTest, $scoreField);
+        $post = $this->scoreValue($postTest, $scoreField);
+
+        return [
+            'pre' => $pre,
+            'post' => $post,
+            'diff' => round($post - $pre, 2),
+            'pre_category' => null,
+            'post_category' => null,
+        ];
+    }
+
+    private function scoreValue(Submission $submission, string $scoreField, ?string $legacyPercentageField = null): float
+    {
+        $score = round((float) $submission->{$scoreField}, 2);
+
+        if ($score > 0) {
+            return $score;
+        }
+
+        if ($legacyPercentageField) {
+            $percentage = (float) $submission->{$legacyPercentageField};
+
+            if ($percentage > 0) {
+                return round($percentage / 20, 2);
+            }
+        }
+
+        return 0.0;
     }
 }

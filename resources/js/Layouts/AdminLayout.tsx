@@ -94,7 +94,7 @@ export default function AdminLayout({ children }: Props) {
     };
 
     return (
-        <div className="flex min-h-screen bg-[#F8FAFC] text-[#172033]">
+        <div className="flex h-screen overflow-hidden bg-[#F8FAFC] text-[#172033]">
             
             {/* Mobile Sidebar Overlay */}
             {sidebarOpen && (
@@ -106,11 +106,11 @@ export default function AdminLayout({ children }: Props) {
 
             {/* Sidebar */}
             <aside className={`
-                fixed top-0 left-0 z-50 h-screen w-72 border-r border-[#E8ECF3] bg-white
-                transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:shrink-0
+                fixed left-0 top-0 z-50 flex h-screen w-72 flex-col border-r border-[#E8ECF3] bg-white
+                transition-transform duration-300 ease-in-out lg:translate-x-0
                 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
             `}>
-                <div className="flex h-16 items-center px-6">
+                <div className="flex h-16 shrink-0 items-center px-6">
                     <Link href="/admin/dashboard" className="flex items-center gap-2 group">
                         <BrandMark className="h-9 w-9 transition-transform group-hover:scale-105" />
                         <span className="font-heading text-lg font-bold text-[#172033]">
@@ -126,7 +126,7 @@ export default function AdminLayout({ children }: Props) {
                     </button>
                 </div>
 
-                <nav className="space-y-1 px-4 py-3">
+                <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto px-4 py-3">
                     {navItems.map((item) => {
                         const Icon = item.icon;
                         const isActive = item.href !== '#' && url.startsWith(new URL(item.href, 'http://localhost').pathname);
@@ -149,7 +149,7 @@ export default function AdminLayout({ children }: Props) {
                     })}
                 </nav>
 
-                <div className="absolute bottom-0 w-full border-t border-[#E8ECF3] p-4">
+                <div className="shrink-0 border-t border-[#E8ECF3] p-4">
                     <button 
                         onClick={handleLogout}
                         className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 font-semibold text-[#F43F5E] transition-colors hover:bg-rose-50"
@@ -162,9 +162,9 @@ export default function AdminLayout({ children }: Props) {
             </aside>
 
             {/* Main Content */}
-            <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+            <div className="flex min-w-0 flex-1 flex-col overflow-hidden lg:pl-72">
                 {/* Topbar */}
-                <header className="flex h-16 items-center justify-between border-b border-[#E8ECF3] bg-white px-4 lg:px-8">
+                <header className="flex h-16 shrink-0 items-center justify-between border-b border-[#E8ECF3] bg-white px-4 lg:px-8">
                     <button 
                         className="text-[#667085] hover:text-[#172033] lg:hidden"
                         onClick={() => setSidebarOpen(true)}
@@ -193,7 +193,7 @@ export default function AdminLayout({ children }: Props) {
                 </header>
 
                 {/* Page Content */}
-                <main className="flex-1 overflow-y-auto p-4 lg:p-8">
+                <main className="min-h-0 flex-1 overflow-y-auto p-4 lg:p-8">
                     {children}
                 </main>
             </div>
