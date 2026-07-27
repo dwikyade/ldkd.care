@@ -41,6 +41,7 @@ class ParticipantDraftFlowTest extends TestCase
             'role' => 'student',
             'language' => 'id',
             'full_name' => 'Peserta Uji',
+            'email' => 'peserta.uji@example.com',
             'school_name' => 'SMA Uji',
             'class_name' => 'X-1',
             'gender' => 'male',
@@ -51,6 +52,7 @@ class ParticipantDraftFlowTest extends TestCase
 
         $this->assertSame('draft', $submission->status);
         $this->assertSame('LDKD-A7K9', $submission->participant->participant_code);
+        $this->assertSame('peserta.uji@example.com', $submission->participant->email);
 
         $this->withSession($this->participantSession($submission))
             ->postJson(route('participant.questionnaire.answers', ['submission' => $submission->result_token]), [

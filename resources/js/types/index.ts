@@ -34,6 +34,7 @@ export interface Participant {
     activity_id: number;
     participant_code: string;
     full_name: string;
+    email?: string | null;
     role: 'student' | 'teacher';
     school_id: number;
     class_id?: number | null;

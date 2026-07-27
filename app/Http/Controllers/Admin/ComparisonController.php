@@ -53,6 +53,7 @@ class ComparisonController extends Controller
             fputcsv($output, [
                 'Kode Peserta',
                 'Nama',
+                'Email',
                 'Peran',
                 'Sekolah',
                 'Kelas',
@@ -94,6 +95,7 @@ class ComparisonController extends Controller
                         fputcsv($output, [
                             $row['participant_code'],
                             $row['full_name'],
+                            $row['email'],
                             $row['role'],
                             $row['school'],
                             $row['classroom'],
@@ -143,6 +145,7 @@ class ComparisonController extends Controller
             ->when($request->query('search'), function ($query, string $search) {
                 $query->where(function ($query) use ($search) {
                     $query->where('full_name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
                         ->orWhere('participant_code', 'like', "%{$search}%");
                 });
             })
@@ -174,6 +177,7 @@ class ComparisonController extends Controller
             'id' => $participant->id,
             'participant_code' => $participant->participant_code,
             'full_name' => $participant->full_name,
+            'email' => $participant->email,
             'role' => $participant->role,
             'school' => $participant->school?->name,
             'classroom' => $participant->classroom?->name,

@@ -97,7 +97,7 @@ export default function Index({ participants, filters, activities, schools, flas
                                 value={filterForm.data.search}
                                 onChange={(event) => filterForm.setData('search', event.target.value)}
                                 className="h-11 w-full rounded-xl border border-[#E8ECF3] bg-white pl-10 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#5B5FEF]"
-                                placeholder="Cari nama atau kode peserta"
+                                placeholder="Cari nama, email, atau kode peserta"
                             />
                         </div>
                         <Select value={filterForm.data.activity_id} onChange={(value) => filterForm.setData('activity_id', value)}>
@@ -148,7 +148,7 @@ export default function Index({ participants, filters, activities, schools, flas
                             Import CSV
                         </Button>
                     </form>
-                    <p className="mt-3 text-xs text-[#667085]">Format kolom: full_name/nama, role/peran, class/kelas, participant_code/kode opsional.</p>
+                    <p className="mt-3 text-xs text-[#667085]">Format kolom: full_name/nama, email/surel opsional, role/peran, class/kelas, participant_code/kode opsional.</p>
                 </CardContent>
             </Card>
 
@@ -177,7 +177,7 @@ export default function Index({ participants, filters, activities, schools, flas
                                 <tr key={participant.id} className="bg-white transition hover:bg-[#F8FAFC]">
                                     <td className="px-5 py-4">
                                         <p className="font-bold text-[#172033]">{participant.full_name}</p>
-                                        <p className="text-xs text-[#667085]">{participant.gender || '-'}</p>
+                                        <p className="text-xs text-[#667085]">{participant.email || 'Email belum diisi'}</p>
                                     </td>
                                     <td className="px-5 py-4 font-mono font-bold text-[#5B5FEF]">{participant.participant_code}</td>
                                     <td className="px-5 py-4 text-[#667085]">{participant.activity?.name || '-'}</td>

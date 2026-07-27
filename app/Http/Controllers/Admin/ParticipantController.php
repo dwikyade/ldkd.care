@@ -29,6 +29,7 @@ class ParticipantController extends Controller
             ->when($request->query('search'), function ($query, string $search) {
                 $query->where(function ($query) use ($search) {
                     $query->where('full_name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
                         ->orWhere('participant_code', 'like', "%{$search}%");
                 });
             })
@@ -121,9 +122,10 @@ class ParticipantController extends Controller
             while (($row = fgetcsv($handle)) !== false) {
                 $data = array_combine($headers, array_pad($row, count($headers), null));
                 $fullName = trim((string) ($data['full_name'] ?? $data['nama'] ?? ''));
+                $email = strtolower(trim((string) ($data['email'] ?? $data['surel'] ?? '')));
                 $role = trim((string) ($data['role'] ?? $data['peran'] ?? 'student'));
 
-                if ($fullName === '' || ! in_array($role, ['student', 'teacher'], true)) {
+                if ($fullName === '' || ! in_array($role, ['student', 'teacher'], true) || ($email !== '' && ! filter_var($email, FILTER_VALIDATE_EMAIL))) {
                     $skipped++;
                     continue;
                 }
@@ -154,6 +156,7 @@ class ParticipantController extends Controller
                     'activity_id' => $validated['activity_id'],
                     'participant_code' => $code,
                     'full_name' => $fullName,
+                    'email' => $email !== '' ? $email : null,
                     'role' => $role,
                     'school_id' => $validated['school_id'],
                     'class_id' => $classId,
@@ -202,6 +205,7 @@ class ParticipantController extends Controller
                     ->ignore($participant?->id),
             ],
             'full_name' => ['required', 'string', 'max:191'],
+            'email' => ['nullable', 'email', 'max:191'],
             'role' => ['required', 'string', 'in:student,teacher'],
             'school_id' => ['required', 'integer', 'exists:schools,id'],
             'class_id' => ['nullable', 'integer', 'exists:classes,id'],

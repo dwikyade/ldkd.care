@@ -77,7 +77,7 @@ export default function Index({ activities, schools, summary }: Props) {
                         value={form.data.search}
                         onChange={(event) => form.setData('search', event.target.value)}
                         className={inputClass}
-                        placeholder="Cari nama atau kode peserta"
+                        placeholder="Cari nama, email, atau kode peserta"
                     />
                     <Select value={form.data.activity_id} onChange={(value) => form.setData('activity_id', value)}>
                         <option value="">Semua kegiatan</option>

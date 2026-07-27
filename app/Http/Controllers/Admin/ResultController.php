@@ -45,6 +45,7 @@ class ResultController extends Controller
             fputcsv($output, [
                 'Kode Peserta',
                 'Nama',
+                'Email',
                 'Peran',
                 'Sekolah',
                 'Kelas',
@@ -73,6 +74,7 @@ class ResultController extends Controller
                         fputcsv($output, [
                             $submission->participant?->participant_code,
                             $submission->participant?->full_name,
+                            $submission->participant?->email,
                             $submission->participant?->role,
                             $submission->participant?->school?->name,
                             $submission->participant?->classroom?->name,
@@ -107,6 +109,7 @@ class ResultController extends Controller
             ->when($request->query('search'), function ($query, string $search) {
                 $query->whereHas('participant', function ($query) use ($search) {
                     $query->where('full_name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
                         ->orWhere('participant_code', 'like', "%{$search}%");
                 });
             })

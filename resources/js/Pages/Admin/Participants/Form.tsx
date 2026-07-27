@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/Components/ui/Card';
 import ModernSelect from '@/Components/ui/ModernSelect';
 import { AdminGuideButton } from '@/Components/admin/AdminGuide';
 import { Activity, Participant, School } from '@/types';
-import { ArrowLeft, Save, Sparkles } from 'lucide-react';
+import { ArrowLeft, Mail, Save, Sparkles } from 'lucide-react';
 import { useMemo } from 'react';
 import type { FormEvent, ReactNode } from 'react';
 
@@ -21,6 +21,7 @@ export default function Form({ participant, activities, schools }: Props) {
         activity_id: participant?.activity_id ? String(participant.activity_id) : '',
         participant_code: participant?.participant_code || '',
         full_name: participant?.full_name || '',
+        email: participant?.email || '',
         role: participant?.role || 'student',
         school_id: participant?.school_id ? String(participant.school_id) : '',
         class_id: participant?.class_id ? String(participant.class_id) : '',
@@ -89,6 +90,20 @@ export default function Form({ participant, activities, schools }: Props) {
 
                         <Field label="Nama Lengkap" error={form.errors.full_name}>
                             <input value={form.data.full_name} onChange={(event) => form.setData('full_name', event.target.value)} className={inputClass} placeholder="Nama peserta" />
+                        </Field>
+
+                        <Field label="Email Sertifikat" error={form.errors.email} hint="Opsional untuk data admin, tetapi wajib diisi peserta saat membuat kode dari halaman responden.">
+                            <div className="relative">
+                                <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#98A2B3]" />
+                                <input
+                                    type="email"
+                                    value={form.data.email || ''}
+                                    onChange={(event) => form.setData('email', event.target.value.toLowerCase())}
+                                    className={`${inputClass} pl-10`}
+                                    placeholder="nama@email.com"
+                                    autoComplete="email"
+                                />
+                            </div>
                         </Field>
 
                         <Field label="Peran" error={form.errors.role}>

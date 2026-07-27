@@ -19,6 +19,7 @@ import {
     HelpCircle,
     History,
     Loader2,
+    Mail,
     QrCode,
     RefreshCw,
     School2,
@@ -81,6 +82,7 @@ interface LookupResult {
         code?: string;
         name?: string;
         role?: Role;
+        email?: string | null;
         school?: string | null;
         classroom?: string | null;
     };
@@ -130,6 +132,9 @@ const copy = {
         profileTitle: 'Lengkapi Profil Peserta',
         profileText: 'Data ini hanya digunakan untuk mengelompokkan hasil evaluasi kegiatan.',
         fullName: 'Nama lengkap',
+        email: 'Email sertifikat',
+        emailPlaceholder: 'nama@email.com',
+        emailHelp: 'Gunakan email aktif agar admin dapat mengirim sertifikat setelah Pre-Test dan Post-Test selesai.',
         school: 'Sekolah',
         chooseSchool: 'Pilih sekolah',
         otherSchool: 'Sekolah lainnya',
@@ -160,7 +165,8 @@ const copy = {
         unsupported: 'Browser ini belum mendukung scan QR langsung. Masukkan kode secara manual.',
         cameraDenied: 'Kamera tidak dapat diakses. Periksa izin kamera atau masukkan kode manual.',
         pretestCompleted: 'Pre-Test dengan kode ini sudah selesai. Gunakan kode yang sama untuk Post-Test.',
-        requiredProfile: 'Nama dan sekolah wajib diisi. Untuk siswa, kelas juga perlu diisi.',
+        requiredProfile: 'Nama, email, dan sekolah wajib diisi. Untuk siswa, kelas juga perlu diisi.',
+        invalidEmail: 'Format email belum valid. Periksa kembali alamat email Anda.',
         useCode: 'Gunakan',
         codeShort: 'Kode',
         name: 'Nama',
@@ -206,6 +212,9 @@ const copy = {
         profileTitle: 'Complete Participant Profile',
         profileText: 'This data is only used to group activity evaluation results.',
         fullName: 'Full name',
+        email: 'Certificate email',
+        emailPlaceholder: 'name@email.com',
+        emailHelp: 'Use an active email so the admin can send your certificate after the Pre-Test and Post-Test are complete.',
         school: 'School',
         chooseSchool: 'Choose school',
         otherSchool: 'Other school',
@@ -236,7 +245,8 @@ const copy = {
         unsupported: 'This browser does not support direct QR scanning yet. Enter the code manually.',
         cameraDenied: 'Camera access failed. Check camera permission or enter the code manually.',
         pretestCompleted: 'Pre-Test with this code is complete. Use the same code for Post-Test.',
-        requiredProfile: 'Name and school are required. Students also need to enter a class.',
+        requiredProfile: 'Name, email, and school are required. Students also need to enter a class.',
+        invalidEmail: 'The email format is not valid yet. Please check your email address.',
         useCode: 'Use',
         codeShort: 'Code',
         name: 'Name',
@@ -253,6 +263,7 @@ const copy = {
 
 const emptyProfile = {
     full_name: '',
+    email: '',
     school_id: '',
     school_name: '',
     class_id: '',
@@ -472,8 +483,15 @@ export default function Identify({ mode, role, language = 'id', activity, activi
             return;
         }
 
-        if (!profile.full_name.trim() || !profile.school_name.trim() || (role === 'student' && !profile.class_name.trim())) {
+        const email = profile.email.trim().toLowerCase();
+
+        if (!profile.full_name.trim() || !email || !profile.school_name.trim() || (role === 'student' && !profile.class_name.trim())) {
             setFormError(t.requiredProfile);
+            return;
+        }
+
+        if (!isValidEmail(email)) {
+            setFormError(t.invalidEmail);
             return;
         }
 
@@ -486,6 +504,7 @@ export default function Identify({ mode, role, language = 'id', activity, activi
                 role,
                 language,
                 full_name: profile.full_name.trim(),
+                email,
                 school_id: selectedSchool?.id,
                 school_name: profile.school_name.trim(),
                 class_id: selectedClass?.id,
@@ -866,6 +885,21 @@ export default function Identify({ mode, role, language = 'id', activity, activi
                                                     <Field label={t.fullName}>
                                                         <input className={inputClass} value={profile.full_name} onChange={(event) => setProfileValue('full_name', event.target.value)} autoComplete="name" />
                                                     </Field>
+                                                    <Field label={t.email}>
+                                                        <div className="relative">
+                                                            <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#98A2B3]" />
+                                                            <input
+                                                                type="email"
+                                                                className={`${inputClass} pl-10`}
+                                                                value={profile.email}
+                                                                placeholder={t.emailPlaceholder}
+                                                                onChange={(event) => setProfileValue('email', event.target.value.toLowerCase())}
+                                                                autoComplete="email"
+                                                                inputMode="email"
+                                                            />
+                                                        </div>
+                                                        <p className="mt-2 text-xs leading-5 text-[#667085]">{t.emailHelp}</p>
+                                                    </Field>
                                                     <Field label={t.school}>
                                                         <ModernSelect className={inputClass} value={profile.school_id} onChange={setSchoolSelection}>
                                                             <option value="">{t.chooseSchool}</option>
@@ -1109,6 +1143,7 @@ function LookupStatusCard({ result, t, isPost, isStartingPost, onContinue, onSta
                     <div className="mt-5 grid gap-3 rounded-2xl border border-white/80 bg-white/80 p-4 text-sm sm:grid-cols-2">
                         <Info label={t.codeShort} value={result.participant.code || '-'} mono />
                         <Info label={t.name} value={result.participant.name || '-'} />
+                        {result.participant.email && <Info label={t.email} value={result.participant.email} />}
                         <Info label={t.school} value={result.participant.school || '-'} />
                         <Info label={t.classroom} value={result.participant.classroom || '-'} />
                     </div>
@@ -1214,6 +1249,10 @@ function normalizeSuffix(value: string): string {
 
 function isValidSuffix(value: string): boolean {
     return /^[A-Z0-9]{4,5}$/.test(value);
+}
+
+function isValidEmail(value: string): boolean {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
 function readError(error: unknown, fallback: string, language: Language): string {

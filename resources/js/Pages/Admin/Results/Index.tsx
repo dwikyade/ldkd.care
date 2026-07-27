@@ -84,7 +84,7 @@ export default function Index({ results, filters, activities, schools, summary }
                                 value={filterForm.data.search}
                                 onChange={(event) => filterForm.setData('search', event.target.value)}
                                 className={searchInputClass}
-                                placeholder="Cari nama atau kode peserta"
+                                placeholder="Cari nama, email, atau kode peserta"
                             />
                         </div>
                         <Select value={filterForm.data.activity_id} onChange={(value) => filterForm.setData('activity_id', value)}>
@@ -142,6 +142,7 @@ export default function Index({ results, filters, activities, schools, summary }
                                 <tr key={result.id} className="bg-white transition hover:bg-[#F8FAFC]">
                                     <td className="px-5 py-4">
                                         <p className="font-bold text-[#172033]">{result.participant?.full_name || '-'}</p>
+                                        <p className="text-xs text-[#667085]">{result.participant?.email || 'Email belum diisi'}</p>
                                         <p className="text-xs text-[#667085]">
                                             {result.participant?.school?.name || '-'}{result.participant?.classroom?.name ? ` / ${result.participant.classroom.name}` : ''}
                                         </p>
