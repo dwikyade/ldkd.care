@@ -2,6 +2,8 @@ import { Head, Link, router, useForm } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Button } from '@/Components/ui/Button';
 import { Card, CardContent } from '@/Components/ui/Card';
+import ModernSelect from '@/Components/ui/ModernSelect';
+import { AdminGuideButton } from '@/Components/admin/AdminGuide';
 import { Activity, Paginated, Participant, School } from '@/types';
 import { FileUp, Plus, Search, Trash2, UserRoundPen } from 'lucide-react';
 import type { FormEvent, ReactNode } from 'react';
@@ -72,12 +74,15 @@ export default function Index({ participants, filters, activities, schools, flas
                     <h1 className="mt-2 font-heading text-3xl font-bold tracking-[-0.01em] text-[#172033]">Manajemen Peserta</h1>
                     <p className="mt-1 text-[#667085]">Kelola kode peserta, peran, sekolah, kelas, dan status pengisian.</p>
                 </div>
-                <Link href={route('admin.participants.create')}>
-                    <Button className="gap-2">
-                        <Plus className="h-4 w-4" />
-                        Tambah Peserta
-                    </Button>
-                </Link>
+                <div className="flex flex-wrap gap-3">
+                    <AdminGuideButton module="participants" />
+                    <Link href={route('admin.participants.create')}>
+                        <Button className="gap-2">
+                            <Plus className="h-4 w-4" />
+                            Tambah Peserta
+                        </Button>
+                    </Link>
+                </div>
             </div>
 
             {flash?.success && <Alert tone="success">{flash.success}</Alert>}
@@ -92,7 +97,7 @@ export default function Index({ participants, filters, activities, schools, flas
                                 value={filterForm.data.search}
                                 onChange={(event) => filterForm.setData('search', event.target.value)}
                                 className="h-11 w-full rounded-xl border border-[#E8ECF3] bg-white pl-10 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#5B5FEF]"
-                                placeholder="Cari nama atau kode peserta"
+                                placeholder="Cari nama, email, atau kode peserta"
                             />
                         </div>
                         <Select value={filterForm.data.activity_id} onChange={(value) => filterForm.setData('activity_id', value)}>
@@ -143,7 +148,7 @@ export default function Index({ participants, filters, activities, schools, flas
                             Import CSV
                         </Button>
                     </form>
-                    <p className="mt-3 text-xs text-[#667085]">Format kolom: full_name/nama, role/peran, class/kelas, participant_code/kode opsional.</p>
+                    <p className="mt-3 text-xs text-[#667085]">Format kolom: full_name/nama, email/surel opsional, role/peran, class/kelas, participant_code/kode opsional.</p>
                 </CardContent>
             </Card>
 
@@ -172,7 +177,7 @@ export default function Index({ participants, filters, activities, schools, flas
                                 <tr key={participant.id} className="bg-white transition hover:bg-[#F8FAFC]">
                                     <td className="px-5 py-4">
                                         <p className="font-bold text-[#172033]">{participant.full_name}</p>
-                                        <p className="text-xs text-[#667085]">{participant.gender || '-'}</p>
+                                        <p className="text-xs text-[#667085]">{participant.email || 'Email belum diisi'}</p>
                                     </td>
                                     <td className="px-5 py-4 font-mono font-bold text-[#5B5FEF]">{participant.participant_code}</td>
                                     <td className="px-5 py-4 text-[#667085]">{participant.activity?.name || '-'}</td>
@@ -193,7 +198,7 @@ export default function Index({ participants, filters, activities, schools, flas
                                                     Edit
                                                 </Button>
                                             </Link>
-                                            <Button type="button" variant="outline" size="sm" onClick={() => deleteParticipant(participant)} className="gap-2 text-[#F43F5E]">
+                                            <Button type="button" variant="outline" size="sm" onClick={() => deleteParticipant(participant)} className="gap-2 text-[#F43F5E]" title="Hati-hati: menghapus peserta dapat memutus hubungan ke hasil dan perbandingan.">
                                                 <Trash2 className="h-4 w-4" />
                                             </Button>
                                         </div>
@@ -211,13 +216,13 @@ export default function Index({ participants, filters, activities, schools, flas
 
 function Select({ value, onChange, children }: { value: string; onChange: (value: string) => void; children: ReactNode }) {
     return (
-        <select
+        <ModernSelect
             value={value}
-            onChange={(event) => onChange(event.target.value)}
+            onChange={onChange}
             className="h-11 rounded-xl border border-[#E8ECF3] bg-white px-3 text-sm text-[#172033] focus:outline-none focus:ring-2 focus:ring-[#5B5FEF]"
         >
             {children}
-        </select>
+        </ModernSelect>
     );
 }
 

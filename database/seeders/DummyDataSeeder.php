@@ -30,9 +30,9 @@ class DummyDataSeeder extends Seeder
                 'address' => 'Jl. Pendidikan No. 1, Jakarta',
                 'classes' => ['X RPL 1', 'XI RPL 1'],
                 'participants' => [
-                    ['code' => 'LDKD-A7K92', 'name' => 'Rizal Afandi', 'role' => 'student', 'class' => 'X RPL 1', 'gender' => 'male'],
-                    ['code' => 'LDKD-B4N18', 'name' => 'Nadia Putri', 'role' => 'student', 'class' => 'XI RPL 1', 'gender' => 'female'],
-                    ['code' => 'LDKD-GURU1', 'name' => 'Dewi Lestari', 'role' => 'teacher', 'class' => null, 'position' => 'Guru BK'],
+                    ['code' => 'LDKD-A7K92', 'name' => 'Rizal Afandi', 'email' => 'rizal.afandi@example.com', 'role' => 'student', 'class' => 'X RPL 1', 'gender' => 'male'],
+                    ['code' => 'LDKD-B4N18', 'name' => 'Nadia Putri', 'email' => 'nadia.putri@example.com', 'role' => 'student', 'class' => 'XI RPL 1', 'gender' => 'female'],
+                    ['code' => 'LDKD-GURU1', 'name' => 'Dewi Lestari', 'email' => 'dewi.lestari@example.com', 'role' => 'teacher', 'class' => null, 'position' => 'Guru BK'],
                 ],
             ],
             [
@@ -40,8 +40,8 @@ class DummyDataSeeder extends Seeder
                 'address' => 'Jl. Merdeka No. 8, Jakarta',
                 'classes' => ['VIII A', 'IX B'],
                 'participants' => [
-                    ['code' => 'LDKD-C9P41', 'name' => 'Fahmi Ramadhan', 'role' => 'student', 'class' => 'VIII A', 'gender' => 'male'],
-                    ['code' => 'LDKD-D2Q77', 'name' => 'Alya Maharani', 'role' => 'student', 'class' => 'IX B', 'gender' => 'female'],
+                    ['code' => 'LDKD-C9P41', 'name' => 'Fahmi Ramadhan', 'email' => 'fahmi.ramadhan@example.com', 'role' => 'student', 'class' => 'VIII A', 'gender' => 'male'],
+                    ['code' => 'LDKD-D2Q77', 'name' => 'Alya Maharani', 'email' => 'alya.maharani@example.com', 'role' => 'student', 'class' => 'IX B', 'gender' => 'female'],
                 ],
             ],
         ];
@@ -75,6 +75,7 @@ class DummyDataSeeder extends Seeder
                     ],
                     [
                         'full_name' => $participantData['name'],
+                        'email' => $participantData['email'] ?? null,
                         'role' => $participantData['role'],
                         'school_id' => $school->id,
                         'class_id' => $participantData['class'] ? $classes[$participantData['class']]->id : null,

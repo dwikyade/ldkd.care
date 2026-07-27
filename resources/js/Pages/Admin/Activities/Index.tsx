@@ -2,6 +2,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Card } from '@/Components/ui/Card';
 import { Button } from '@/Components/ui/Button';
+import { AdminGuideButton } from '@/Components/admin/AdminGuide';
 import type { Activity, Paginated } from '@/types';
 import { Calendar, Edit2, FileText, Plus, Trash2, Users } from 'lucide-react';
 import type { ReactNode } from 'react';
@@ -31,12 +32,15 @@ export default function Index({ activities, flash }: Props) {
                     <h1 className="mt-2 font-heading text-3xl font-bold tracking-[-0.01em] text-[#172033]">Manajemen Kegiatan</h1>
                     <p className="mt-1 text-[#667085]">Kelola periode kegiatan edukasi, tema, dan status pengisian LDKD Care.</p>
                 </div>
-                <Button asChild className="gap-2">
-                    <Link href={route('admin.activities.create')}>
-                        <Plus className="h-4 w-4" />
-                        Tambah Kegiatan
-                    </Link>
-                </Button>
+                <div className="flex flex-wrap gap-3">
+                    <AdminGuideButton module="activities" />
+                    <Button asChild className="gap-2">
+                        <Link href={route('admin.activities.create')}>
+                            <Plus className="h-4 w-4" />
+                            Tambah Kegiatan
+                        </Link>
+                    </Button>
+                </div>
             </div>
 
             {flash?.success && <Alert tone="success">{flash.success}</Alert>}
@@ -105,7 +109,7 @@ export default function Index({ activities, flash }: Props) {
                                                     Edit
                                                 </Link>
                                             </Button>
-                                            <Button type="button" variant="outline" size="sm" onClick={() => handleDelete(activity)} className="text-[#F43F5E]">
+                                            <Button type="button" variant="outline" size="sm" onClick={() => handleDelete(activity)} className="text-[#F43F5E]" title="Hati-hati: menghapus kegiatan dapat memengaruhi data yang terhubung.">
                                                 <Trash2 className="h-4 w-4" />
                                             </Button>
                                         </div>

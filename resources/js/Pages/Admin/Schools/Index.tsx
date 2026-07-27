@@ -2,6 +2,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Card } from '@/Components/ui/Card';
 import { Button } from '@/Components/ui/Button';
+import { AdminGuideButton } from '@/Components/admin/AdminGuide';
 import type { Paginated, School } from '@/types';
 import { Edit2, Layers3, MapPin, Plus, School as SchoolIcon, Trash2, Users } from 'lucide-react';
 import type { ReactNode } from 'react';
@@ -31,12 +32,15 @@ export default function Index({ schools, flash }: Props) {
                     <h1 className="mt-2 font-heading text-3xl font-bold tracking-[-0.01em] text-[#172033]">Sekolah dan Kelas</h1>
                     <p className="mt-1 text-[#667085]">Kelola institusi peserta dan hubungkan data siswa atau guru ke sekolah yang tepat.</p>
                 </div>
-                <Button asChild className="gap-2">
-                    <Link href={route('admin.schools.create')}>
-                        <Plus className="h-4 w-4" />
-                        Tambah Sekolah
-                    </Link>
-                </Button>
+                <div className="flex flex-wrap gap-3">
+                    <AdminGuideButton module="schools" />
+                    <Button asChild className="gap-2">
+                        <Link href={route('admin.schools.create')}>
+                            <Plus className="h-4 w-4" />
+                            Tambah Sekolah
+                        </Link>
+                    </Button>
+                </div>
             </div>
 
             {flash?.success && <Alert tone="success">{flash.success}</Alert>}
@@ -112,7 +116,7 @@ export default function Index({ schools, flash }: Props) {
                                                     Edit
                                                 </Link>
                                             </Button>
-                                            <Button type="button" variant="outline" size="sm" onClick={() => handleDelete(school)} className="text-[#F43F5E]">
+                                            <Button type="button" variant="outline" size="sm" onClick={() => handleDelete(school)} className="text-[#F43F5E]" title="Hati-hati: menghapus sekolah dapat mengganggu filter peserta dan laporan.">
                                                 <Trash2 className="h-4 w-4" />
                                             </Button>
                                         </div>

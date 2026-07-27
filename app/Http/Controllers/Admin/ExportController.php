@@ -38,9 +38,11 @@ class ExportController extends Controller
 
         return response()->streamDownload(function () use ($request) {
             $output = fopen('php://output', 'w');
+            fwrite($output, "\xEF\xBB\xBF");
             fputcsv($output, [
                 'Kode Peserta',
                 'Nama',
+                'Email',
                 'Peran',
                 'Sekolah',
                 'Kelas',
@@ -56,6 +58,7 @@ class ExportController extends Controller
                 ->when($request->query('search'), function ($query, string $search) {
                     $query->where(function ($query) use ($search) {
                         $query->where('full_name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%")
                             ->orWhere('participant_code', 'like', "%{$search}%");
                     });
                 })
@@ -68,6 +71,7 @@ class ExportController extends Controller
                         fputcsv($output, [
                             $participant->participant_code,
                             $participant->full_name,
+                            $participant->email,
                             $participant->role,
                             $participant->school?->name,
                             $participant->classroom?->name,

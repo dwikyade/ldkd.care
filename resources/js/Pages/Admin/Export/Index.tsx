@@ -1,7 +1,9 @@
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, useForm } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Button } from '@/Components/ui/Button';
 import { Card, CardContent } from '@/Components/ui/Card';
+import ModernSelect from '@/Components/ui/ModernSelect';
+import { AdminGuideButton } from '@/Components/admin/AdminGuide';
 import type { Activity, School } from '@/types';
 import { BarChart3, ClipboardList, Download, FileSpreadsheet, Users } from 'lucide-react';
 import type { ReactNode } from 'react';
@@ -53,10 +55,13 @@ export default function Index({ activities, schools, summary }: Props) {
         <AdminLayout>
             <Head title="Export Data" />
 
-            <div className="mb-8">
-                <p className="text-sm font-bold uppercase tracking-[0.18em] text-[#5B5FEF]">Laporan</p>
-                <h1 className="mt-2 font-heading text-3xl font-bold tracking-[-0.01em] text-[#172033]">Export Data</h1>
-                <p className="mt-1 text-[#667085]">Pilih filter lalu unduh data peserta, hasil kuesioner, atau perbandingan pre-test dan post-test.</p>
+            <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                <div>
+                    <p className="text-sm font-bold uppercase tracking-[0.18em] text-[#5B5FEF]">Laporan</p>
+                    <h1 className="mt-2 font-heading text-3xl font-bold tracking-[-0.01em] text-[#172033]">Export Data</h1>
+                    <p className="mt-1 text-[#667085]">Pilih filter lalu unduh data peserta, hasil kuesioner, atau perbandingan pre-test dan post-test.</p>
+                </div>
+                <AdminGuideButton module="export" />
             </div>
 
             <div className="mb-6 grid gap-4 md:grid-cols-4">
@@ -72,7 +77,7 @@ export default function Index({ activities, schools, summary }: Props) {
                         value={form.data.search}
                         onChange={(event) => form.setData('search', event.target.value)}
                         className={inputClass}
-                        placeholder="Cari nama atau kode peserta"
+                        placeholder="Cari nama, email, atau kode peserta"
                     />
                     <Select value={form.data.activity_id} onChange={(value) => form.setData('activity_id', value)}>
                         <option value="">Semua kegiatan</option>
@@ -133,9 +138,9 @@ const inputClass = 'h-11 w-full rounded-xl border border-[#E8ECF3] bg-white px-3
 
 function Select({ value, onChange, children }: { value: string; onChange: (value: string) => void; children: ReactNode }) {
     return (
-        <select value={value} onChange={(event) => onChange(event.target.value)} className={inputClass}>
+        <ModernSelect value={value} onChange={onChange} className={inputClass}>
             {children}
-        </select>
+        </ModernSelect>
     );
 }
 
@@ -161,10 +166,10 @@ function ExportCard({ title, description, icon, href, highlighted = false }: { t
                 <h2 className="font-heading text-xl font-bold text-[#172033]">{title}</h2>
                 <p className="mt-3 flex-1 leading-7 text-[#667085]">{description}</p>
                 <Button asChild className="mt-6 gap-2">
-                    <Link href={href}>
+                    <a href={href}>
                         <Download className="h-4 w-4" />
                         Unduh CSV
-                    </Link>
+                    </a>
                 </Button>
             </CardContent>
         </Card>

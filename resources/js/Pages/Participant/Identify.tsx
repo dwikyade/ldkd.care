@@ -4,6 +4,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import ParticipantLayout from '@/Layouts/ParticipantLayout';
 import { Card, CardContent } from '@/Components/ui/Card';
 import { Button } from '@/Components/ui/Button';
+import ModernSelect from '@/Components/ui/ModernSelect';
 import {
     AlertTriangle,
     ArrowLeft,
@@ -18,6 +19,7 @@ import {
     HelpCircle,
     History,
     Loader2,
+    Mail,
     QrCode,
     RefreshCw,
     School2,
@@ -49,15 +51,20 @@ interface School {
     classes?: Classroom[];
 }
 
+interface ActivityOption {
+    id: number;
+    name: string;
+    theme?: string | null;
+    start_date?: string | null;
+    end_date?: string | null;
+}
+
 interface Props {
     mode: TestMode;
     role: Role;
     language?: Language;
-    activity?: {
-        id: number;
-        name: string;
-        theme?: string | null;
-    } | null;
+    activity?: ActivityOption | null;
+    activities?: ActivityOption[];
     schools?: School[];
 }
 
@@ -75,6 +82,7 @@ interface LookupResult {
         code?: string;
         name?: string;
         role?: Role;
+        email?: string | null;
         school?: string | null;
         classroom?: string | null;
     };
@@ -98,6 +106,10 @@ const copy = {
         descriptionCreate: 'Buat kode pendek milik Anda, simpan baik-baik, lalu gunakan kode yang sama untuk Post-Test.',
         descriptionLookup: 'Gunakan kode yang sama agar data Pre-Test dan Post-Test tetap terhubung.',
         activeActivity: 'Kegiatan aktif',
+        activityLabel: 'Pilih kegiatan',
+        activityPlaceholder: 'Pilih kegiatan yang sedang Anda ikuti',
+        activityHelp: 'Pastikan kegiatan sesuai arahan panitia. Kode peserta hanya berlaku pada kegiatan yang dipilih.',
+        activityTheme: 'Tema',
         noActivityTitle: 'Belum Ada Kegiatan Aktif',
         noActivityText: 'Admin perlu mengaktifkan kegiatan sebelum peserta dapat mengisi kuesioner.',
         pre: 'Pre-Test',
@@ -120,6 +132,9 @@ const copy = {
         profileTitle: 'Lengkapi Profil Peserta',
         profileText: 'Data ini hanya digunakan untuk mengelompokkan hasil evaluasi kegiatan.',
         fullName: 'Nama lengkap',
+        email: 'Email sertifikat',
+        emailPlaceholder: 'nama@email.com',
+        emailHelp: 'Gunakan email aktif agar admin dapat mengirim sertifikat setelah Pre-Test dan Post-Test selesai.',
         school: 'Sekolah',
         chooseSchool: 'Pilih sekolah',
         otherSchool: 'Sekolah lainnya',
@@ -150,7 +165,8 @@ const copy = {
         unsupported: 'Browser ini belum mendukung scan QR langsung. Masukkan kode secara manual.',
         cameraDenied: 'Kamera tidak dapat diakses. Periksa izin kamera atau masukkan kode manual.',
         pretestCompleted: 'Pre-Test dengan kode ini sudah selesai. Gunakan kode yang sama untuk Post-Test.',
-        requiredProfile: 'Nama dan sekolah wajib diisi. Untuk siswa, kelas juga perlu diisi.',
+        requiredProfile: 'Nama, email, dan sekolah wajib diisi. Untuk siswa, kelas juga perlu diisi.',
+        invalidEmail: 'Format email belum valid. Periksa kembali alamat email Anda.',
         useCode: 'Gunakan',
         codeShort: 'Kode',
         name: 'Nama',
@@ -170,6 +186,10 @@ const copy = {
         descriptionCreate: 'Create your short code, keep it safely, then use the same code for the Post-Test.',
         descriptionLookup: 'Use the same code so your Pre-Test and Post-Test data stay connected.',
         activeActivity: 'Active activity',
+        activityLabel: 'Choose activity',
+        activityPlaceholder: 'Choose the activity you are joining',
+        activityHelp: 'Make sure it matches the organizer instruction. Participant codes only work for the selected activity.',
+        activityTheme: 'Theme',
         noActivityTitle: 'No Active Activity',
         noActivityText: 'An admin must activate an activity before participants can complete the questionnaire.',
         pre: 'Pre-Test',
@@ -192,6 +212,9 @@ const copy = {
         profileTitle: 'Complete Participant Profile',
         profileText: 'This data is only used to group activity evaluation results.',
         fullName: 'Full name',
+        email: 'Certificate email',
+        emailPlaceholder: 'name@email.com',
+        emailHelp: 'Use an active email so the admin can send your certificate after the Pre-Test and Post-Test are complete.',
         school: 'School',
         chooseSchool: 'Choose school',
         otherSchool: 'Other school',
@@ -222,7 +245,8 @@ const copy = {
         unsupported: 'This browser does not support direct QR scanning yet. Enter the code manually.',
         cameraDenied: 'Camera access failed. Check camera permission or enter the code manually.',
         pretestCompleted: 'Pre-Test with this code is complete. Use the same code for Post-Test.',
-        requiredProfile: 'Name and school are required. Students also need to enter a class.',
+        requiredProfile: 'Name, email, and school are required. Students also need to enter a class.',
+        invalidEmail: 'The email format is not valid yet. Please check your email address.',
         useCode: 'Use',
         codeShort: 'Code',
         name: 'Name',
@@ -239,6 +263,7 @@ const copy = {
 
 const emptyProfile = {
     full_name: '',
+    email: '',
     school_id: '',
     school_name: '',
     class_id: '',
@@ -247,10 +272,11 @@ const emptyProfile = {
     position: '',
 };
 
-export default function Identify({ mode, role, language = 'id', activity, schools = [] }: Props) {
+export default function Identify({ mode, role, language = 'id', activity, activities = [], schools = [] }: Props) {
     const reduceMotion = useReducedMotion();
     const t = copy[language];
     const [intent, setIntent] = useState<Intent>(mode === 'post_test' ? 'posttest' : 'create_pretest');
+    const [selectedActivityId, setSelectedActivityId] = useState(() => String(activity?.id ?? activities[0]?.id ?? ''));
     const [suffix, setSuffix] = useState('');
     const [availability, setAvailability] = useState<Availability>('idle');
     const [statusText, setStatusText] = useState('');
@@ -271,7 +297,12 @@ export default function Identify({ mode, role, language = 'id', activity, school
     const intervalRef = useRef<number | null>(null);
     const checkTimerRef = useRef<number | null>(null);
 
-    const storageKey = activity ? `ldkd_recent_codes_${activity.id}` : 'ldkd_recent_codes';
+    const selectedActivity = useMemo(
+        () => activities.find((item) => String(item.id) === selectedActivityId) || (activity && String(activity.id) === selectedActivityId ? activity : null),
+        [activities, selectedActivityId, activity],
+    );
+    const activityQuery = selectedActivity ? { activity_id: selectedActivity.id } : {};
+    const storageKey = selectedActivity ? `ldkd_recent_codes_${selectedActivity.id}` : 'ldkd_recent_codes';
     const normalizedSuffix = normalizeSuffix(suffix);
     const fullCode = normalizedSuffix ? `LDKD-${normalizedSuffix}` : 'LDKD-';
     const isCreate = intent === 'create_pretest';
@@ -291,6 +322,23 @@ export default function Identify({ mode, role, language = 'id', activity, school
     }, [mode]);
 
     useEffect(() => {
+        const firstActivityId = activity?.id ?? activities[0]?.id;
+
+        if (!selectedActivityId && firstActivityId) {
+            setSelectedActivityId(String(firstActivityId));
+        }
+    }, [activity?.id, activities, selectedActivityId]);
+
+    useEffect(() => {
+        setSuffix('');
+        setAvailability('idle');
+        setStatusText('');
+        setCodeConfirmed(false);
+        setLookupResult(null);
+        setFormError(null);
+    }, [selectedActivity?.id]);
+
+    useEffect(() => {
         try {
             const saved = JSON.parse(window.localStorage.getItem(storageKey) || '[]') as RecentCode[];
             setRecentCodes(Array.isArray(saved) ? saved.slice(0, 5) : []);
@@ -300,7 +348,7 @@ export default function Identify({ mode, role, language = 'id', activity, school
     }, [storageKey]);
 
     useEffect(() => {
-        if (!activity || !isCreate) {
+        if (!selectedActivity || !isCreate) {
             return;
         }
 
@@ -329,7 +377,7 @@ export default function Identify({ mode, role, language = 'id', activity, school
         checkTimerRef.current = window.setTimeout(() => {
             axios
                 .post(route('participant.code.check'), {
-                    activity_id: activity.id,
+                    activity_id: selectedActivity.id,
                     suffix: normalizedSuffix,
                 })
                 .then((response) => {
@@ -347,7 +395,7 @@ export default function Identify({ mode, role, language = 'id', activity, school
                 window.clearTimeout(checkTimerRef.current);
             }
         };
-    }, [activity, isCreate, normalizedSuffix, t.available, t.checking, t.invalid, t.taken]);
+    }, [selectedActivity, isCreate, normalizedSuffix, t.available, t.checking, t.invalid, t.taken]);
 
     const stopScanner = () => {
         if (intervalRef.current) {
@@ -369,7 +417,7 @@ export default function Identify({ mode, role, language = 'id', activity, school
     };
 
     const saveRecent = (codeOrSuffix: string, testType: TestMode) => {
-        if (!activity) {
+        if (!selectedActivity) {
             return;
         }
 
@@ -394,7 +442,7 @@ export default function Identify({ mode, role, language = 'id', activity, school
     };
 
     const generateCode = async () => {
-        if (!activity) {
+        if (!selectedActivity) {
             return;
         }
 
@@ -403,7 +451,7 @@ export default function Identify({ mode, role, language = 'id', activity, school
 
         try {
             const response = await axios.post(route('participant.code.generate'), {
-                activity_id: activity.id,
+                activity_id: selectedActivity.id,
             });
             setSuffix(response.data.suffix);
             setAvailability('available');
@@ -430,13 +478,20 @@ export default function Identify({ mode, role, language = 'id', activity, school
         event.preventDefault();
         setFormError(null);
 
-        if (!activity || availability !== 'available' || !codeConfirmed) {
+        if (!selectedActivity || availability !== 'available' || !codeConfirmed) {
             setFormError(t.invalid);
             return;
         }
 
-        if (!profile.full_name.trim() || !profile.school_name.trim() || (role === 'student' && !profile.class_name.trim())) {
+        const email = profile.email.trim().toLowerCase();
+
+        if (!profile.full_name.trim() || !email || !profile.school_name.trim() || (role === 'student' && !profile.class_name.trim())) {
             setFormError(t.requiredProfile);
+            return;
+        }
+
+        if (!isValidEmail(email)) {
+            setFormError(t.invalidEmail);
             return;
         }
 
@@ -444,11 +499,12 @@ export default function Identify({ mode, role, language = 'id', activity, school
 
         try {
             const response = await axios.post(route('participant.register'), {
-                activity_id: activity.id,
+                activity_id: selectedActivity.id,
                 suffix: normalizedSuffix,
                 role,
                 language,
                 full_name: profile.full_name.trim(),
+                email,
                 school_id: selectedSchool?.id,
                 school_name: profile.school_name.trim(),
                 class_id: selectedClass?.id,
@@ -467,7 +523,7 @@ export default function Identify({ mode, role, language = 'id', activity, school
     };
 
     const lookupCode = async () => {
-        if (!activity || !isValidSuffix(normalizedSuffix)) {
+        if (!selectedActivity || !isValidSuffix(normalizedSuffix)) {
             setFormError(t.invalid);
             return;
         }
@@ -478,7 +534,7 @@ export default function Identify({ mode, role, language = 'id', activity, school
 
         try {
             const response = await axios.post(route(isPost ? 'participant.posttest.eligibility' : 'participant.pretest.resume'), {
-                activity_id: activity.id,
+                activity_id: selectedActivity.id,
                 suffix: normalizedSuffix,
                 role,
                 language,
@@ -498,7 +554,7 @@ export default function Identify({ mode, role, language = 'id', activity, school
     };
 
     const startPostTest = async () => {
-        if (!activity || !isValidSuffix(normalizedSuffix)) {
+        if (!selectedActivity || !isValidSuffix(normalizedSuffix)) {
             setFormError(t.invalid);
             return;
         }
@@ -508,7 +564,7 @@ export default function Identify({ mode, role, language = 'id', activity, school
 
         try {
             const response = await axios.post(route('participant.posttest.start'), {
-                activity_id: activity.id,
+                activity_id: selectedActivity.id,
                 suffix: normalizedSuffix,
                 role,
                 language,
@@ -574,7 +630,7 @@ export default function Identify({ mode, role, language = 'id', activity, school
 
             <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col pt-4">
                 <ParticipantStepper current={2} />
-                <Link href={route('participant.select-role', { mode, lang: language })} className="mb-8 inline-flex items-center text-sm font-semibold text-slate-500 transition-colors hover:text-indigo-600">
+                <Link href={route('participant.select-role', { mode, lang: language, ...activityQuery })} className="mb-8 inline-flex items-center text-sm font-semibold text-slate-500 transition-colors hover:text-indigo-600">
                     <ArrowLeft className="mr-2 h-4 w-4" />
                     {t.back}
                 </Link>
@@ -602,7 +658,7 @@ export default function Identify({ mode, role, language = 'id', activity, school
                         </p>
                     </section>
 
-                    {!activity && (
+                    {!selectedActivity && (
                         <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-amber-800">
                             <div className="flex gap-3">
                                 <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
@@ -614,10 +670,38 @@ export default function Identify({ mode, role, language = 'id', activity, school
                         </div>
                     )}
 
-                    {activity && (
-                        <div className="rounded-2xl border border-white/80 bg-white/90 p-4 text-sm shadow-[0_18px_45px_-35px_rgba(23,32,51,0.45)] backdrop-blur">
-                            <p className="font-semibold text-slate-500">{t.activeActivity}</p>
-                            <p className="mt-1 font-bold text-slate-950">{activity.name}</p>
+                    {selectedActivity && (
+                        <div className="rounded-3xl border border-white/80 bg-white/90 p-5 text-sm shadow-[0_18px_45px_-35px_rgba(23,32,51,0.45)] backdrop-blur">
+                            <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+                                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#EEF7FF] text-[#5B5FEF]">
+                                    <School2 className="h-5 w-5" />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                    <label htmlFor="activity-select" className="font-semibold text-slate-500">
+                                        {t.activityLabel}
+                                    </label>
+                                    <ModernSelect
+                                        id="activity-select"
+                                        value={selectedActivityId}
+                                        onChange={setSelectedActivityId}
+                                        disabled={activities.length <= 1}
+                                        className={`${inputClass} mt-2`}
+                                    >
+                                        <option value="" disabled>{t.activityPlaceholder}</option>
+                                        {activities.map((item) => (
+                                            <option key={item.id} value={String(item.id)}>
+                                                {item.name}
+                                            </option>
+                                        ))}
+                                    </ModernSelect>
+                                    <p className="mt-2 leading-6 text-[#667085]">{t.activityHelp}</p>
+                                    {selectedActivity.theme && (
+                                        <p className="mt-2 inline-flex rounded-full border border-[#D9DDFF] bg-[#F1F3FF] px-3 py-1 text-xs font-bold text-[#5B5FEF]">
+                                            {t.activityTheme}: {selectedActivity.theme}
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
                         </div>
                     )}
 
@@ -634,7 +718,7 @@ export default function Identify({ mode, role, language = 'id', activity, school
                                     </p>
                                     {intent === 'posttest' && (
                                         <Button asChild variant="outline" className="mt-4 gap-2">
-                                            <Link href={route('participant.identify', { mode: 'pre_test', role, lang: language })}>
+                                            <Link href={route('participant.identify', { mode: 'pre_test', role, lang: language, ...activityQuery })}>
                                                 {t.startPretest}
                                                 <ArrowRight className="h-4 w-4" />
                                             </Link>
@@ -697,17 +781,17 @@ export default function Identify({ mode, role, language = 'id', activity, school
                                                 placeholder="A7K92"
                                                 maxLength={5}
                                                 className="w-full border-0 bg-white px-4 font-mono text-lg font-bold uppercase tracking-[0.18em] text-[#172033] outline-none placeholder:text-[#CBD5E1]"
-                                                disabled={!activity || isRegistering || isLookingUp}
+                                                disabled={!selectedActivity || isRegistering || isLookingUp}
                                             />
                                         </div>
 
                                         {isCreate ? (
-                                            <Button type="button" variant="outline" className="gap-2" onClick={generateCode} disabled={!activity || isGenerating}>
+                                            <Button type="button" variant="outline" className="gap-2" onClick={generateCode} disabled={!selectedActivity || isGenerating}>
                                                 {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
                                                 {t.generate}
                                             </Button>
                                         ) : (
-                                            <Button type="button" className="gap-2" onClick={lookupCode} disabled={!activity || isLookingUp || !isValidSuffix(normalizedSuffix)}>
+                                            <Button type="button" className="gap-2" onClick={lookupCode} disabled={!selectedActivity || isLookingUp || !isValidSuffix(normalizedSuffix)}>
                                                 {isLookingUp ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
                                                 {isPost ? t.lookupPost : t.lookup}
                                             </Button>
@@ -765,7 +849,7 @@ export default function Identify({ mode, role, language = 'id', activity, school
                                                 type="button"
                                                 className="gap-2"
                                                 onClick={isScanning ? stopScanner : startScanner}
-                                                disabled={!activity}
+                                                disabled={!selectedActivity}
                                             >
                                                 {isScanning ? <X className="h-4 w-4" /> : <QrCode className="h-4 w-4" />}
                                                 {isScanning ? t.stopScan : t.scan}
@@ -801,8 +885,23 @@ export default function Identify({ mode, role, language = 'id', activity, school
                                                     <Field label={t.fullName}>
                                                         <input className={inputClass} value={profile.full_name} onChange={(event) => setProfileValue('full_name', event.target.value)} autoComplete="name" />
                                                     </Field>
+                                                    <Field label={t.email}>
+                                                        <div className="relative">
+                                                            <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#98A2B3]" />
+                                                            <input
+                                                                type="email"
+                                                                className={`${inputClass} pl-10`}
+                                                                value={profile.email}
+                                                                placeholder={t.emailPlaceholder}
+                                                                onChange={(event) => setProfileValue('email', event.target.value.toLowerCase())}
+                                                                autoComplete="email"
+                                                                inputMode="email"
+                                                            />
+                                                        </div>
+                                                        <p className="mt-2 text-xs leading-5 text-[#667085]">{t.emailHelp}</p>
+                                                    </Field>
                                                     <Field label={t.school}>
-                                                        <select className={inputClass} value={profile.school_id} onChange={(event) => setSchoolSelection(event.target.value)}>
+                                                        <ModernSelect className={inputClass} value={profile.school_id} onChange={setSchoolSelection}>
                                                             <option value="">{t.chooseSchool}</option>
                                                             {schools.map((school) => (
                                                                 <option key={school.id} value={String(school.id)}>
@@ -810,7 +909,7 @@ export default function Identify({ mode, role, language = 'id', activity, school
                                                                 </option>
                                                             ))}
                                                             <option value="__other__">{t.otherSchool}</option>
-                                                        </select>
+                                                        </ModernSelect>
                                                         {(profile.school_id === '__other__' || schools.length === 0) && (
                                                             <input
                                                                 className={`${inputClass} mt-3`}
@@ -824,7 +923,7 @@ export default function Identify({ mode, role, language = 'id', activity, school
                                                         <>
                                                             <Field label={t.classroom}>
                                                                 {selectedSchool && classOptions.length > 0 ? (
-                                                                    <select className={inputClass} value={profile.class_id} onChange={(event) => setClassSelection(event.target.value)}>
+                                                                    <ModernSelect className={inputClass} value={profile.class_id} onChange={setClassSelection}>
                                                                         <option value="">{t.chooseClass}</option>
                                                                         {classOptions.map((item) => (
                                                                             <option key={item.id} value={String(item.id)}>
@@ -832,7 +931,7 @@ export default function Identify({ mode, role, language = 'id', activity, school
                                                                             </option>
                                                                         ))}
                                                                         <option value="__other__">{t.otherClass}</option>
-                                                                    </select>
+                                                                    </ModernSelect>
                                                                 ) : null}
                                                                 {(profile.class_id === '__other__' || !selectedSchool || classOptions.length === 0) && (
                                                                     <input
@@ -844,11 +943,11 @@ export default function Identify({ mode, role, language = 'id', activity, school
                                                                 )}
                                                             </Field>
                                                             <Field label={t.gender}>
-                                                                <select className={inputClass} value={profile.gender} onChange={(event) => setProfileValue('gender', event.target.value)}>
+                                                                <ModernSelect className={inputClass} value={profile.gender} onChange={(value) => setProfileValue('gender', value)}>
                                                                     <option value="">-</option>
                                                                     <option value="male">{t.male}</option>
                                                                     <option value="female">{t.female}</option>
-                                                                </select>
+                                                                </ModernSelect>
                                                             </Field>
                                                         </>
                                                     ) : (
@@ -864,7 +963,7 @@ export default function Identify({ mode, role, language = 'id', activity, school
                                                     <Button type="button" variant="ghost" onClick={() => setCodeConfirmed(false)} disabled={isRegistering}>
                                                         {t.back}
                                                     </Button>
-                                                    <Button type="submit" size="lg" className="gap-2" disabled={isRegistering || !activity}>
+                                                    <Button type="submit" size="lg" className="gap-2" disabled={isRegistering || !selectedActivity}>
                                                         {isRegistering ? <Loader2 className="h-5 w-5 animate-spin" /> : <ArrowRight className="h-5 w-5" />}
                                                         {isRegistering ? t.registering : t.register}
                                                     </Button>
@@ -918,7 +1017,7 @@ export default function Identify({ mode, role, language = 'id', activity, school
                                     </p>
                                     {mode === 'pre_test' && (
                                         <Button asChild variant="outline" className="mt-5 w-full">
-                                            <Link href={route('participant.identify', { mode: 'post_test', role, lang: language })}>
+                                            <Link href={route('participant.identify', { mode: 'post_test', role, lang: language, ...activityQuery })}>
                                                 {t.posttest}
                                             </Link>
                                         </Button>
@@ -928,7 +1027,7 @@ export default function Identify({ mode, role, language = 'id', activity, school
                                             <p className="font-heading font-bold text-amber-900">{t.noCodeTitle}</p>
                                             <p className="mt-2 text-sm leading-6 text-amber-800">{t.noCodeText}</p>
                                             <Button asChild variant="outline" className="mt-4 w-full gap-2 !border-amber-200 !text-amber-900 hover:!bg-white">
-                                                <Link href={route('participant.identify', { mode: 'pre_test', role, lang: language })}>
+                                                <Link href={route('participant.identify', { mode: 'pre_test', role, lang: language, ...activityQuery })}>
                                                     {t.startPretest}
                                                     <ArrowRight className="h-4 w-4" />
                                                 </Link>
@@ -1044,6 +1143,7 @@ function LookupStatusCard({ result, t, isPost, isStartingPost, onContinue, onSta
                     <div className="mt-5 grid gap-3 rounded-2xl border border-white/80 bg-white/80 p-4 text-sm sm:grid-cols-2">
                         <Info label={t.codeShort} value={result.participant.code || '-'} mono />
                         <Info label={t.name} value={result.participant.name || '-'} />
+                        {result.participant.email && <Info label={t.email} value={result.participant.email} />}
                         <Info label={t.school} value={result.participant.school || '-'} />
                         <Info label={t.classroom} value={result.participant.classroom || '-'} />
                     </div>
@@ -1149,6 +1249,10 @@ function normalizeSuffix(value: string): string {
 
 function isValidSuffix(value: string): boolean {
     return /^[A-Z0-9]{4,5}$/.test(value);
+}
+
+function isValidEmail(value: string): boolean {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
 function readError(error: unknown, fallback: string, language: Language): string {

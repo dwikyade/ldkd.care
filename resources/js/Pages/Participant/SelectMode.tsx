@@ -48,6 +48,8 @@ export default function SelectMode() {
     const { url } = usePage();
     const query = new URLSearchParams(url.split('?')[1] || '');
     const language = (query.get('lang') === 'en' ? 'en' : 'id') as Language;
+    const activityId = query.get('activity_id');
+    const activityQuery = activityId ? { activity_id: activityId } : {};
     const [selectedMode, setSelectedMode] = useState<TestMode | null>(null);
     const reduceMotion = useReducedMotion();
     const t = copy[language];
@@ -79,7 +81,7 @@ export default function SelectMode() {
             return;
         }
 
-        router.visit(route('participant.select-role', { mode: selectedMode, lang: language }));
+        router.visit(route('participant.select-role', { mode: selectedMode, lang: language, ...activityQuery }));
     };
 
     return (

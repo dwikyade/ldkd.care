@@ -49,18 +49,41 @@ class ComparisonController extends Controller
 
         return response()->streamDownload(function () use ($request) {
             $output = fopen('php://output', 'w');
+            fwrite($output, "\xEF\xBB\xBF");
             fputcsv($output, [
                 'Kode Peserta',
                 'Nama',
+                'Email',
                 'Peran',
                 'Sekolah',
                 'Kelas',
-                'Pre Literasi',
-                'Post Literasi',
-                'Selisih Literasi',
-                'Pre Keamanan',
-                'Post Keamanan',
-                'Selisih Keamanan',
+                'Pre Literasi (%)',
+                'Post Literasi (%)',
+                'Selisih Literasi (%)',
+                'Pre Keamanan (%)',
+                'Post Keamanan (%)',
+                'Selisih Keamanan (%)',
+                'Pre Digital Skill (1-5)',
+                'Post Digital Skill (1-5)',
+                'Selisih Digital Skill',
+                'Pre Digital Ethics (1-5)',
+                'Post Digital Ethics (1-5)',
+                'Selisih Digital Ethics',
+                'Pre Digital Safety (1-5)',
+                'Post Digital Safety (1-5)',
+                'Selisih Digital Safety',
+                'Pre Digital Culture (1-5)',
+                'Post Digital Culture (1-5)',
+                'Selisih Digital Culture',
+                'Pre Skor Literasi (1-5)',
+                'Post Skor Literasi (1-5)',
+                'Selisih Skor Literasi',
+                'Pre Skor Keamanan (1-5)',
+                'Post Skor Keamanan (1-5)',
+                'Selisih Skor Keamanan',
+                'Pre Total Index (1-5)',
+                'Post Total Index (1-5)',
+                'Selisih Total Index',
                 'Status',
             ]);
 
@@ -72,6 +95,7 @@ class ComparisonController extends Controller
                         fputcsv($output, [
                             $row['participant_code'],
                             $row['full_name'],
+                            $row['email'],
                             $row['role'],
                             $row['school'],
                             $row['classroom'],
@@ -81,6 +105,27 @@ class ComparisonController extends Controller
                             $row['pre_data_security'],
                             $row['post_data_security'],
                             $row['data_security_diff'],
+                            $row['pre_digital_skill_score'],
+                            $row['post_digital_skill_score'],
+                            $row['digital_skill_diff'],
+                            $row['pre_digital_ethics_score'],
+                            $row['post_digital_ethics_score'],
+                            $row['digital_ethics_diff'],
+                            $row['pre_digital_safety_score'],
+                            $row['post_digital_safety_score'],
+                            $row['digital_safety_diff'],
+                            $row['pre_digital_culture_score'],
+                            $row['post_digital_culture_score'],
+                            $row['digital_culture_diff'],
+                            $row['pre_literacy_score'],
+                            $row['post_literacy_score'],
+                            $row['literacy_score_diff'],
+                            $row['pre_security_score'],
+                            $row['post_security_score'],
+                            $row['security_score_diff'],
+                            $row['pre_total_index'],
+                            $row['post_total_index'],
+                            $row['total_index_diff'],
                             $row['status'],
                         ]);
                     }
@@ -100,6 +145,7 @@ class ComparisonController extends Controller
             ->when($request->query('search'), function ($query, string $search) {
                 $query->where(function ($query) use ($search) {
                     $query->where('full_name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
                         ->orWhere('participant_code', 'like', "%{$search}%");
                 });
             })
@@ -131,6 +177,7 @@ class ComparisonController extends Controller
             'id' => $participant->id,
             'participant_code' => $participant->participant_code,
             'full_name' => $participant->full_name,
+            'email' => $participant->email,
             'role' => $participant->role,
             'school' => $participant->school?->name,
             'classroom' => $participant->classroom?->name,
@@ -140,7 +187,46 @@ class ComparisonController extends Controller
             'pre_data_security' => $pre?->data_security_percentage,
             'post_data_security' => $post?->data_security_percentage,
             'data_security_diff' => $isComplete ? round($post->data_security_percentage - $pre->data_security_percentage, 2) : null,
+            'pre_digital_skill_score' => $pre ? $this->scoreValue($pre->digital_skill_score) : null,
+            'post_digital_skill_score' => $post ? $this->scoreValue($post->digital_skill_score) : null,
+            'digital_skill_diff' => $isComplete ? $this->scoreDiff($pre->digital_skill_score, $post->digital_skill_score) : null,
+            'pre_digital_ethics_score' => $pre ? $this->scoreValue($pre->digital_ethics_score) : null,
+            'post_digital_ethics_score' => $post ? $this->scoreValue($post->digital_ethics_score) : null,
+            'digital_ethics_diff' => $isComplete ? $this->scoreDiff($pre->digital_ethics_score, $post->digital_ethics_score) : null,
+            'pre_digital_safety_score' => $pre ? $this->scoreValue($pre->digital_safety_score) : null,
+            'post_digital_safety_score' => $post ? $this->scoreValue($post->digital_safety_score) : null,
+            'digital_safety_diff' => $isComplete ? $this->scoreDiff($pre->digital_safety_score, $post->digital_safety_score) : null,
+            'pre_digital_culture_score' => $pre ? $this->scoreValue($pre->digital_culture_score) : null,
+            'post_digital_culture_score' => $post ? $this->scoreValue($post->digital_culture_score) : null,
+            'digital_culture_diff' => $isComplete ? $this->scoreDiff($pre->digital_culture_score, $post->digital_culture_score) : null,
+            'pre_literacy_score' => $pre ? $this->scoreValue($pre->literacy_score ?: ((float) $pre->digital_literacy_percentage / 20)) : null,
+            'post_literacy_score' => $post ? $this->scoreValue($post->literacy_score ?: ((float) $post->digital_literacy_percentage / 20)) : null,
+            'literacy_score_diff' => $isComplete ? $this->scoreDiff($pre->literacy_score ?: ((float) $pre->digital_literacy_percentage / 20), $post->literacy_score ?: ((float) $post->digital_literacy_percentage / 20)) : null,
+            'pre_security_score' => $pre ? $this->scoreValue($pre->security_score ?: ((float) $pre->data_security_percentage / 20)) : null,
+            'post_security_score' => $post ? $this->scoreValue($post->security_score ?: ((float) $post->data_security_percentage / 20)) : null,
+            'security_score_diff' => $isComplete ? $this->scoreDiff($pre->security_score ?: ((float) $pre->data_security_percentage / 20), $post->security_score ?: ((float) $post->data_security_percentage / 20)) : null,
+            'pre_total_index' => $pre ? $this->scoreValue($pre->total_index) : null,
+            'post_total_index' => $post ? $this->scoreValue($post->total_index) : null,
+            'total_index_diff' => $isComplete ? $this->scoreDiff($pre->total_index, $post->total_index) : null,
             'status' => $isComplete ? 'complete' : 'incomplete',
         ];
+    }
+
+    private function scoreValue(float|string|null $value): ?float
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        return round((float) $value, 2);
+    }
+
+    private function scoreDiff(float|string|null $pre, float|string|null $post): ?float
+    {
+        if ($pre === null || $post === null || $pre === '' || $post === '') {
+            return null;
+        }
+
+        return round((float) $post - (float) $pre, 2);
     }
 }

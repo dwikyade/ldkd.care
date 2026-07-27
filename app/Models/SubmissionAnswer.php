@@ -18,10 +18,17 @@ class SubmissionAnswer extends Model
         'option_label_snapshot',
         'weight_snapshot',
         'module',
+        'kominfo_pillar',
+        'question_type',
+        'assessment_type',
+        'response_scale_code',
+        'competency_snapshot',
+        'included_in_score',
     ];
 
     protected $casts = [
         'weight_snapshot' => 'decimal:2',
+        'included_in_score' => 'boolean',
     ];
 
     public function submission(): BelongsTo

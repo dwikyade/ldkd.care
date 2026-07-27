@@ -2,20 +2,32 @@ import { Head, Link, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Card } from '@/Components/ui/Card';
 import { Button } from '@/Components/ui/Button';
-import type { Paginated, Question } from '@/types';
-import { Edit2, Laptop, Plus, Shield, Trash2 } from 'lucide-react';
+import ModernSelect from '@/Components/ui/ModernSelect';
+import { AdminGuideButton } from '@/Components/admin/AdminGuide';
+import type { Paginated, Question, QuestionnaireVersion } from '@/types';
+import { Edit2, Laptop, Plus, Printer, Shield, Trash2 } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 interface Props {
     questions: Paginated<Question>;
     currentModule: 'digital_literacy' | 'data_security';
+    currentPillar?: string | null;
+    currentVersionId?: number | null;
+    versions: QuestionnaireVersion[];
+    pillarOptions: Array<{ value: string; label: string }>;
     flash?: {
         success?: string;
         error?: string;
     };
 }
 
-export default function Index({ questions, currentModule, flash }: Props) {
+export default function Index({ questions, currentModule, currentPillar, currentVersionId, versions, pillarOptions, flash }: Props) {
+    const printParams = {
+        module: 'all',
+        ...(currentPillar ? { pillar: currentPillar } : {}),
+        ...(currentVersionId ? { version_id: currentVersionId } : {}),
+    };
+
     const handleDelete = (question: Question) => {
         if (confirm('Hapus soal ini?')) {
             router.delete(route('admin.questions.destroy', question.id), { preserveScroll: true });
@@ -30,14 +42,23 @@ export default function Index({ questions, currentModule, flash }: Props) {
                 <div>
                     <p className="text-sm font-bold uppercase tracking-[0.18em] text-[#5B5FEF]">Kuesioner</p>
                     <h1 className="mt-2 font-heading text-3xl font-bold tracking-[-0.01em] text-[#172033]">Bank Soal Kuesioner</h1>
-                    <p className="mt-1 text-[#667085]">Kelola soal untuk modul Literasi Digital dan Keamanan Digital tanpa mengubah logika scoring.</p>
+                    <p className="mt-1 text-[#667085]">Kelola soal, pilar Kominfo, skala jawaban, dan mapping UNESCO untuk instrumen kuesioner.</p>
                 </div>
-                <Button asChild className="gap-2">
-                    <Link href={route('admin.questions.create', { module: currentModule })}>
-                        <Plus className="h-4 w-4" />
-                        Tambah Soal
-                    </Link>
-                </Button>
+                <div className="flex flex-wrap gap-3">
+                    <AdminGuideButton module="questions" />
+                    <Button asChild variant="outline" className="gap-2">
+                        <a href={route('admin.questions.print', printParams)} target="_blank" rel="noreferrer">
+                            <Printer className="h-4 w-4" />
+                            Cetak Kuesioner
+                        </a>
+                    </Button>
+                    <Button asChild className="gap-2">
+                        <Link href={route('admin.questions.create', { module: currentModule })}>
+                            <Plus className="h-4 w-4" />
+                            Tambah Soal
+                        </Link>
+                    </Button>
+                </div>
             </div>
 
             {flash?.success && <Alert tone="success">{flash.success}</Alert>}
@@ -58,13 +79,56 @@ export default function Index({ questions, currentModule, flash }: Props) {
                 />
             </div>
 
+            <Card className="mb-6">
+                <div className="grid gap-4 p-4 md:grid-cols-2 lg:grid-cols-3">
+                    <Field label="Filter Pilar">
+                        <ModernSelect
+                            value={currentPillar || ''}
+                            onChange={(value) => router.get(route('admin.questions.index'), {
+                                module: currentModule,
+                                pillar: value || undefined,
+                                version_id: currentVersionId || undefined,
+                            }, { preserveState: true, preserveScroll: true })}
+                            className={inputClass}
+                        >
+                            <option value="">Semua pilar</option>
+                            {pillarOptions.map((pillar) => (
+                                <option key={pillar.value} value={pillar.value}>
+                                    {pillar.label}
+                                </option>
+                            ))}
+                        </ModernSelect>
+                    </Field>
+                    <Field label="Filter Versi Instrumen">
+                        <ModernSelect
+                            value={currentVersionId || ''}
+                            onChange={(value) => router.get(route('admin.questions.index'), {
+                                module: currentModule,
+                                pillar: currentPillar || undefined,
+                                version_id: Number(value) || undefined,
+                            }, { preserveState: true, preserveScroll: true })}
+                            className={inputClass}
+                        >
+                            <option value="">Semua versi</option>
+                            {versions.map((version) => (
+                                <option key={version.id} value={version.id}>
+                                    {version.name} ({version.status})
+                                </option>
+                            ))}
+                        </ModernSelect>
+                    </Field>
+                </div>
+            </Card>
+
             <Card>
                 <div className="overflow-x-auto">
-                    <table className="w-full min-w-[960px] text-left text-sm">
+                    <table className="w-full min-w-[1180px] text-left text-sm">
                         <thead className="border-b border-[#E8ECF3] bg-[#F8FAFC] text-xs uppercase tracking-[0.12em] text-[#667085]">
                             <tr>
                                 <th className="px-5 py-4 text-center">No</th>
                                 <th className="px-5 py-4">Pertanyaan</th>
+                                <th className="px-5 py-4">Pilar</th>
+                                <th className="px-5 py-4">Skala</th>
                                 <th className="px-5 py-4 text-center">Opsi</th>
                                 <th className="px-5 py-4 text-center">Status</th>
                                 <th className="px-5 py-4 text-right">Aksi</th>
@@ -73,7 +137,7 @@ export default function Index({ questions, currentModule, flash }: Props) {
                         <tbody className="divide-y divide-[#E8ECF3]">
                             {questions.data.length === 0 && (
                                 <tr>
-                                    <td colSpan={5} className="px-5 py-12 text-center">
+                                    <td colSpan={7} className="px-5 py-12 text-center">
                                         <div className="mx-auto flex max-w-sm flex-col items-center">
                                             <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#F1F3FF] text-[#5B5FEF]">
                                                 {currentModule === 'digital_literacy' ? <Laptop className="h-6 w-6" /> : <Shield className="h-6 w-6" />}
@@ -91,6 +155,18 @@ export default function Index({ questions, currentModule, flash }: Props) {
                                     <td className="px-5 py-4">
                                         <p className="line-clamp-2 font-semibold leading-6 text-[#172033]">{question.text_id}</p>
                                         {question.text_en && <p className="mt-1 line-clamp-1 text-sm text-[#667085]">{question.text_en}</p>}
+                                        {question.unesco_competence_code && (
+                                            <p className="mt-2 text-xs font-bold uppercase tracking-[0.12em] text-[#98A2B3]">
+                                                UNESCO {question.unesco_competence_code}
+                                            </p>
+                                        )}
+                                    </td>
+                                    <td className="px-5 py-4">
+                                        <Badge tone="indigo">{pillarLabel(question.kominfo_pillar)}</Badge>
+                                    </td>
+                                    <td className="px-5 py-4">
+                                        <p className="font-semibold text-[#172033]">{question.response_scale?.name_id || '-'}</p>
+                                        {question.questionnaire_version?.code && <p className="mt-1 text-xs font-semibold text-[#98A2B3]">{question.questionnaire_version.code}</p>}
                                     </td>
                                     <td className="px-5 py-4 text-center">
                                         <span className="inline-flex h-9 min-w-9 items-center justify-center rounded-full bg-[#F1F3FF] px-3 text-sm font-bold text-[#5B5FEF]">
@@ -108,7 +184,7 @@ export default function Index({ questions, currentModule, flash }: Props) {
                                                     Edit
                                                 </Link>
                                             </Button>
-                                            <Button type="button" variant="outline" size="sm" onClick={() => handleDelete(question)} className="text-[#F43F5E]">
+                                            <Button type="button" variant="outline" size="sm" onClick={() => handleDelete(question)} className="text-[#F43F5E]" title="Hati-hati: hapus soal hanya jika tidak dibutuhkan lagi. Untuk perubahan besar, gunakan versioning instrumen.">
                                                 <Trash2 className="h-4 w-4" />
                                             </Button>
                                         </div>
@@ -146,6 +222,28 @@ function Badge({ children, tone = 'indigo' }: { children: ReactNode; tone?: 'ind
     };
 
     return <span className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${classes[tone]}`}>{children}</span>;
+}
+
+const inputClass = 'h-11 w-full rounded-xl border border-[#E8ECF3] bg-white px-3 text-sm font-semibold text-[#172033] focus:outline-none focus:ring-2 focus:ring-[#5B5FEF]';
+
+function Field({ label, children }: { label: string; children: ReactNode }) {
+    return (
+        <div className="space-y-2">
+            <label className="text-sm font-bold text-[#172033]">{label}</label>
+            {children}
+        </div>
+    );
+}
+
+function pillarLabel(value?: string | null): string {
+    const labels: Record<string, string> = {
+        digital_skill: 'Digital Skill',
+        digital_ethics: 'Digital Ethics',
+        digital_safety: 'Digital Safety',
+        digital_culture: 'Digital Culture',
+    };
+
+    return value ? labels[value] || value : '-';
 }
 
 function Alert({ children, tone }: { children: ReactNode; tone: 'success' | 'danger' }) {

@@ -81,6 +81,7 @@ class PostTestEligibilityService
         return [
             'code' => $participant->participant_code,
             'name' => $participant->full_name,
+            'email' => $participant->email,
             'role' => $participant->role,
             'school' => $participant->school?->name,
             'classroom' => $participant->classroom?->name,

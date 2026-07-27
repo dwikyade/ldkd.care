@@ -2,6 +2,8 @@ import { Head, Link, router, useForm } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Button } from '@/Components/ui/Button';
 import { Card, CardContent } from '@/Components/ui/Card';
+import ModernSelect from '@/Components/ui/ModernSelect';
+import { AdminGuideButton } from '@/Components/admin/AdminGuide';
 import type { Activity, Paginated, School } from '@/types';
 import {
     ArrowUpRight,
@@ -18,6 +20,7 @@ interface ComparisonRow {
     id: number;
     participant_code: string;
     full_name: string;
+    email?: string | null;
     role: 'student' | 'teacher';
     school?: string | null;
     classroom?: string | null;
@@ -77,12 +80,15 @@ export default function Index({ comparisons, filters, activities, schools, summa
                     <h1 className="mt-2 font-heading text-3xl font-bold tracking-[-0.01em] text-[#172033]">Perbandingan Pre-Test dan Post-Test</h1>
                     <p className="mt-1 text-[#667085]">Bandingkan peningkatan literasi digital dan keamanan digital berdasarkan kode peserta yang sama.</p>
                 </div>
-                <Button asChild className="gap-2">
-                    <Link href={route('admin.comparisons.export', filterForm.data)}>
-                        <Download className="h-4 w-4" />
-                        Export CSV
-                    </Link>
-                </Button>
+                <div className="flex flex-wrap gap-3">
+                    <AdminGuideButton module="comparisons" />
+                    <Button asChild className="gap-2">
+                        <a href={route('admin.comparisons.export', filterForm.data)}>
+                            <Download className="h-4 w-4" />
+                            Export CSV
+                        </a>
+                    </Button>
+                </div>
             </div>
 
             <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
@@ -102,7 +108,7 @@ export default function Index({ comparisons, filters, activities, schools, summa
                                 value={filterForm.data.search}
                                 onChange={(event) => filterForm.setData('search', event.target.value)}
                                 className={searchInputClass}
-                                placeholder="Cari nama atau kode peserta"
+                                placeholder="Cari nama, email, atau kode peserta"
                             />
                         </div>
                         <Select value={filterForm.data.activity_id} onChange={(value) => filterForm.setData('activity_id', value)}>
@@ -165,6 +171,7 @@ export default function Index({ comparisons, filters, activities, schools, summa
                                 <tr key={row.id} className="bg-white transition hover:bg-[#F8FAFC]">
                                     <td className="px-5 py-4">
                                         <p className="font-bold text-[#172033]">{row.full_name}</p>
+                                        <p className="text-xs text-[#667085]">{row.email || 'Email belum diisi'}</p>
                                         <p className="text-xs text-[#667085]">{row.status === 'complete' ? 'Pre-test dan post-test tersedia' : 'Menunggu salah satu tes'}</p>
                                     </td>
                                     <td className="px-5 py-4 font-mono font-bold text-[#5B5FEF]">{row.participant_code}</td>
@@ -202,9 +209,9 @@ const searchInputClass = 'h-11 w-full rounded-xl border border-[#E8ECF3] bg-whit
 
 function Select({ value, onChange, children }: { value: string; onChange: (value: string) => void; children: ReactNode }) {
     return (
-        <select value={value} onChange={(event) => onChange(event.target.value)} className={inputClass}>
+        <ModernSelect value={value} onChange={onChange} className={inputClass}>
             {children}
-        </select>
+        </ModernSelect>
     );
 }
 

@@ -23,6 +23,7 @@ import ParticipantStepper from '@/Components/ldkd/ParticipantStepper';
 type Language = 'id' | 'en';
 type Phase = 'instructions' | 'questions' | 'review';
 type ModuleKey = 'digital_literacy' | 'data_security';
+type PillarKey = 'digital_skill' | 'digital_ethics' | 'digital_safety' | 'digital_culture';
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'failed';
 
 interface AnswerOption {
@@ -34,6 +35,15 @@ interface AnswerOption {
 interface Question {
     id: number;
     module?: ModuleKey;
+    kominfo_pillar?: PillarKey | null;
+    question_type?: string | null;
+    response_scale?: {
+        code: string;
+        name_id: string;
+        name_en?: string | null;
+    } | null;
+    assessment_type?: string | null;
+    unesco_competence_code?: string | null;
     text_id: string;
     text_en: string;
     answer_options: AnswerOption[];
@@ -49,6 +59,13 @@ interface Props {
     initial_answers?: Record<number, number>;
     initial_step?: number;
     last_saved_at?: string | null;
+    instrument?: {
+        version_id?: number | null;
+        version_name?: string | null;
+        version_code?: string | null;
+        description?: string | null;
+        source_reference?: string | null;
+    };
     participant?: {
         code?: string | null;
         name?: string | null;
@@ -65,7 +82,8 @@ const copy = {
         instructionsTitle: 'Instruksi Pengisian',
         instructionsText: 'Jawab seluruh pertanyaan sesuai kondisi Anda. Semua soal wajib dijawab sebelum dikirim.',
         instructionItems: [
-            'Terdapat dua modul: Literasi Digital dan Keamanan Digital.',
+            'Terdapat dua modul pengisian: Literasi Digital dan Keamanan Digital.',
+            'Soal dipetakan ke empat pilar: Digital Skill, Digital Ethics, Digital Safety, dan Digital Culture.',
             'Perkiraan waktu pengisian 5-10 menit.',
             'Gunakan skala jawaban yang tersedia pada setiap pertanyaan.',
             'Jawaban tidak dapat diubah setelah submit.',
@@ -100,6 +118,13 @@ const copy = {
         noQuestion: 'Belum ada soal aktif. Hubungi admin kegiatan.',
         digital_literacy: 'Literasi Digital',
         data_security: 'Keamanan Digital',
+        digital_skill: 'Digital Skill',
+        digital_ethics: 'Digital Ethics',
+        digital_safety: 'Digital Safety',
+        digital_culture: 'Digital Culture',
+        instrumentLabel: 'Instrumen adaptasi berbasis Indeks Literasi Digital Indonesia 2022 dan dipetakan menggunakan UNESCO Digital Literacy Global Framework.',
+        pillarSummary: 'Ringkasan Pilar',
+        scale: 'Skala',
         pre: 'Pre-Test',
         post: 'Post-Test',
     },
@@ -110,6 +135,7 @@ const copy = {
         instructionsText: 'Answer every question based on your condition. All questions are required before submission.',
         instructionItems: [
             'There are two modules: Digital Literacy and Digital Security.',
+            'Questions are mapped to four pillars: Digital Skill, Digital Ethics, Digital Safety, and Digital Culture.',
             'Estimated completion time is 5-10 minutes.',
             'Use the available response scale on each question.',
             'Answers cannot be changed after submission.',
@@ -144,6 +170,13 @@ const copy = {
         noQuestion: 'No active questions are available. Contact the activity admin.',
         digital_literacy: 'Digital Literacy',
         data_security: 'Digital Security',
+        digital_skill: 'Digital Skill',
+        digital_ethics: 'Digital Ethics',
+        digital_safety: 'Digital Safety',
+        digital_culture: 'Digital Culture',
+        instrumentLabel: 'Adapted instrument based on the 2022 Indonesian Digital Literacy Index and mapped using the UNESCO Digital Literacy Global Framework.',
+        pillarSummary: 'Pillar Summary',
+        scale: 'Scale',
         pre: 'Pre-Test',
         post: 'Post-Test',
     },
@@ -159,6 +192,7 @@ export default function Questionnaire({
     initial_answers = {},
     initial_step = 0,
     last_saved_at = null,
+    instrument,
     participant,
 }: Props) {
     const reduceMotion = useReducedMotion();
@@ -191,6 +225,22 @@ export default function Questionnaire({
         () => [...moduleQuestions.digital_literacy, ...moduleQuestions.data_security],
         [moduleQuestions],
     );
+
+    const pillarQuestions = useMemo(() => {
+        const grouped: Record<PillarKey, Question[]> = {
+            digital_skill: [],
+            digital_ethics: [],
+            digital_safety: [],
+            digital_culture: [],
+        };
+
+        allQuestions.forEach((question) => {
+            const pillar = question.kominfo_pillar || (question.module === 'data_security' ? 'digital_safety' : 'digital_skill');
+            grouped[pillar].push(question);
+        });
+
+        return grouped;
+    }, [allQuestions]);
 
     const currentQuestion = allQuestions[currentStep];
     const answeredCount = allQuestions.filter((question) => Boolean(answers[question.id])).length;
@@ -434,6 +484,9 @@ export default function Questionnaire({
                                         {participant.school && <span>{participant.school}</span>}
                                     </div>
                                 )}
+                                <p className="mt-5 max-w-2xl text-sm font-medium leading-6 text-[#667085]">
+                                    {language === 'id' ? instrument?.description || t.instrumentLabel : t.instrumentLabel}
+                                </p>
                             </div>
                         </div>
 
@@ -595,6 +648,14 @@ export default function Questionnaire({
                                     {currentQuestion.module === 'digital_literacy' ? <BookOpenCheck className="h-4 w-4" /> : <ShieldCheck className="h-4 w-4" />}
                                     {t[currentQuestion.module || 'digital_literacy']}
                                 </span>
+                                <span className="rounded-full bg-violet-50 px-3 py-1 text-xs font-bold uppercase tracking-widest text-violet-700">
+                                    {t[currentQuestion.kominfo_pillar || (currentQuestion.module === 'data_security' ? 'digital_safety' : 'digital_skill')]}
+                                </span>
+                                {currentQuestion.unesco_competence_code && (
+                                    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-widest text-slate-600">
+                                        UNESCO {currentQuestion.unesco_competence_code}
+                                    </span>
+                                )}
                                 <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-widest text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                                     {t.question} {currentStep + 1} {t.from} {allQuestions.length}
                                 </span>
@@ -607,6 +668,11 @@ export default function Questionnaire({
                                             <h2 className="font-heading text-2xl font-semibold leading-tight text-slate-950 md:text-3xl">
                                                 {language === 'id' ? currentQuestion.text_id : currentQuestion.text_en || currentQuestion.text_id}
                                             </h2>
+                                            {currentQuestion.response_scale && (
+                                                <p className="mt-4 text-sm font-semibold text-[#667085]">
+                                                    {t.scale}: {language === 'id' ? currentQuestion.response_scale.name_id : currentQuestion.response_scale.name_en || currentQuestion.response_scale.name_id}
+                                                </p>
+                                            )}
                                         </div>
 
                                         <div className="space-y-3">
@@ -692,6 +758,25 @@ export default function Questionnaire({
                                                 </div>
                                             );
                                         })}
+                                    </div>
+
+                                    <div className="mt-6">
+                                        <p className="mb-3 text-sm font-bold uppercase tracking-[0.14em] text-[#667085]">{t.pillarSummary}</p>
+                                        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                                            {(['digital_skill', 'digital_ethics', 'digital_safety', 'digital_culture'] as PillarKey[]).map((pillar) => {
+                                                const total = pillarQuestions[pillar].length;
+                                                const answered = pillarQuestions[pillar].filter((question) => answers[question.id]).length;
+
+                                                return (
+                                                    <div key={pillar} className="rounded-2xl border border-[#E8ECF3] bg-white p-4">
+                                                        <p className="font-heading text-sm font-bold text-[#172033]">{t[pillar]}</p>
+                                                        <p className="mt-2 text-sm font-semibold text-[#667085]">
+                                                            {answered} / {total} {t.answered}
+                                                        </p>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
                                     </div>
 
                                     {missingQuestions.length > 0 && (

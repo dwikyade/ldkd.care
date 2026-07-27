@@ -2,6 +2,8 @@ import { Head, Link, router, useForm } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Button } from '@/Components/ui/Button';
 import { Card, CardContent } from '@/Components/ui/Card';
+import ModernSelect from '@/Components/ui/ModernSelect';
+import { AdminGuideButton } from '@/Components/admin/AdminGuide';
 import type { Activity, Paginated, School, SubmissionResult } from '@/types';
 import {
     BookOpen,
@@ -56,12 +58,15 @@ export default function Index({ results, filters, activities, schools, summary }
                     <h1 className="mt-2 font-heading text-3xl font-bold tracking-[-0.01em] text-[#172033]">Hasil Kuesioner</h1>
                     <p className="mt-1 text-[#667085]">Pantau skor literasi digital dan keamanan digital dari pre-test maupun post-test.</p>
                 </div>
-                <Button asChild className="gap-2">
-                    <Link href={route('admin.results.export', filterForm.data)}>
-                        <Download className="h-4 w-4" />
-                        Export CSV
-                    </Link>
-                </Button>
+                <div className="flex flex-wrap gap-3">
+                    <AdminGuideButton module="results" />
+                    <Button asChild className="gap-2">
+                        <a href={route('admin.results.export', filterForm.data)}>
+                            <Download className="h-4 w-4" />
+                            Export CSV
+                        </a>
+                    </Button>
+                </div>
             </div>
 
             <div className="mb-6 grid gap-4 md:grid-cols-3">
@@ -79,7 +84,7 @@ export default function Index({ results, filters, activities, schools, summary }
                                 value={filterForm.data.search}
                                 onChange={(event) => filterForm.setData('search', event.target.value)}
                                 className={searchInputClass}
-                                placeholder="Cari nama atau kode peserta"
+                                placeholder="Cari nama, email, atau kode peserta"
                             />
                         </div>
                         <Select value={filterForm.data.activity_id} onChange={(value) => filterForm.setData('activity_id', value)}>
@@ -137,6 +142,7 @@ export default function Index({ results, filters, activities, schools, summary }
                                 <tr key={result.id} className="bg-white transition hover:bg-[#F8FAFC]">
                                     <td className="px-5 py-4">
                                         <p className="font-bold text-[#172033]">{result.participant?.full_name || '-'}</p>
+                                        <p className="text-xs text-[#667085]">{result.participant?.email || 'Email belum diisi'}</p>
                                         <p className="text-xs text-[#667085]">
                                             {result.participant?.school?.name || '-'}{result.participant?.classroom?.name ? ` / ${result.participant.classroom.name}` : ''}
                                         </p>
@@ -171,9 +177,9 @@ const searchInputClass = 'h-11 w-full rounded-xl border border-[#E8ECF3] bg-whit
 
 function Select({ value, onChange, children }: { value: string; onChange: (value: string) => void; children: ReactNode }) {
     return (
-        <select value={value} onChange={(event) => onChange(event.target.value)} className={inputClass}>
+        <ModernSelect value={value} onChange={onChange} className={inputClass}>
             {children}
-        </select>
+        </ModernSelect>
     );
 }
 

@@ -32,6 +32,7 @@ class ParticipantRegistrationService
                     'activity_id' => $data['activity_id'],
                     'participant_code' => $participantCode,
                     'full_name' => $data['full_name'],
+                    'email' => strtolower(trim((string) $data['email'])),
                     'role' => $data['role'],
                     'school_id' => $school->id,
                     'class_id' => $classroom?->id,

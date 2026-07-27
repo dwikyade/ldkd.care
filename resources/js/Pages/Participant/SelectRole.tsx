@@ -45,6 +45,8 @@ export default function SelectRole() {
     const query = new URLSearchParams(url.split('?')[1] || '');
     const mode = query.get('mode') === 'post_test' ? 'post_test' : 'pre_test';
     const language = (query.get('lang') === 'en' ? 'en' : 'id') as Language;
+    const activityId = query.get('activity_id');
+    const activityQuery = activityId ? { activity_id: activityId } : {};
     const [selectedRole, setSelectedRole] = useState<Role | null>(null);
     const reduceMotion = useReducedMotion();
     const t = copy[language];
@@ -74,7 +76,7 @@ export default function SelectRole() {
             return;
         }
 
-        router.visit(route('participant.identify', { mode, role: selectedRole, lang: language }));
+        router.visit(route('participant.identify', { mode, role: selectedRole, lang: language, ...activityQuery }));
     };
 
     return (
@@ -83,7 +85,7 @@ export default function SelectRole() {
 
             <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col pt-4">
                 <ParticipantStepper current={1} />
-                <Link href={route('participant.select-mode', { lang: language })} className="mb-8 inline-flex items-center text-sm text-slate-500 transition-colors hover:text-indigo-600">
+                <Link href={route('participant.select-mode', { lang: language, ...activityQuery })} className="mb-8 inline-flex items-center text-sm text-slate-500 transition-colors hover:text-indigo-600">
                     <ArrowLeft className="mr-2 h-4 w-4" />
                     {t.back}
                 </Link>

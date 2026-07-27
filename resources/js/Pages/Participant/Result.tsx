@@ -20,11 +20,26 @@ interface Submission {
     };
     test_type: 'pre_test' | 'post_test';
     language: Language;
+    digital_skill_score?: number | string;
+    digital_ethics_score?: number | string;
+    digital_safety_score?: number | string;
+    digital_culture_score?: number | string;
+    literacy_score?: number | string;
+    security_score?: number | string;
+    total_index?: number | string;
+    literacy_category?: string | null;
+    security_category?: string | null;
+    total_category?: string | null;
     digital_literacy_percentage: number | string;
     digital_literacy_category: string;
     data_security_percentage: number | string;
     data_security_category: string;
     submitted_at?: string | null;
+    questionnaire_version?: {
+        name?: string | null;
+        code?: string | null;
+        description?: string | null;
+    } | null;
 }
 
 interface Tip {
@@ -36,13 +51,15 @@ interface ComparisonMetric {
     pre: number;
     post: number;
     diff: number;
-    pre_category: string;
-    post_category: string;
+    pre_category?: string | null;
+    post_category?: string | null;
 }
 
 interface Comparison {
     digital_literacy: ComparisonMetric;
     data_security: ComparisonMetric;
+    total_index?: ComparisonMetric;
+    pillars?: Record<'digital_skill' | 'digital_ethics' | 'digital_safety' | 'digital_culture', ComparisonMetric>;
     average_diff: number;
     pre_submitted_at?: string | null;
     post_submitted_at?: string | null;
@@ -63,6 +80,17 @@ const copy = {
         subtitle: 'Hasil berikut hanya menampilkan ringkasan skor dan tips edukasi untuk Anda.',
         digital_literacy: 'Literasi Digital',
         data_security: 'Keamanan Digital',
+        digital_skill: 'Digital Skill',
+        digital_ethics: 'Digital Ethics',
+        digital_safety: 'Digital Safety',
+        digital_culture: 'Digital Culture',
+        totalIndex: 'Indeks Total',
+        literacyIndex: 'Skor Literasi',
+        securityIndex: 'Skor Keamanan',
+        pillarScores: 'Skor Empat Pilar',
+        scoreScale: 'Skala 1-5',
+        operationalNote: 'Kategori hasil adalah kategori operasional LDKD Care, bukan klasifikasi resmi Kominfo atau UNESCO.',
+        instrumentLabel: 'Instrumen adaptasi berbasis Indeks Literasi Digital Indonesia 2022 dan dipetakan menggunakan UNESCO Digital Literacy Global Framework.',
         resultSummary: 'Ringkasan Hasil',
         tip: 'Tips Edukasi',
         noTipShort: 'Tidak ada rekomendasi yang ditampilkan untuk kategori ini.',
@@ -84,7 +112,7 @@ const copy = {
         startPost: 'Lanjut ke Post-Test',
         comparisonTitle: 'Perbandingan Pre-Test dan Post-Test',
         comparisonSubtitle: 'Ringkasan ini menunjukkan perubahan skor setelah kegiatan edukasi. Angka positif berarti pemahaman meningkat dibanding pengisian awal.',
-        averageChange: 'Rata-rata perubahan',
+        averageChange: 'Perubahan indeks total',
         before: 'Pre-Test',
         after: 'Post-Test',
         point: 'poin',
@@ -103,6 +131,17 @@ const copy = {
         subtitle: 'This page only shows your score summary and education tips.',
         digital_literacy: 'Digital Literacy',
         data_security: 'Digital Security',
+        digital_skill: 'Digital Skill',
+        digital_ethics: 'Digital Ethics',
+        digital_safety: 'Digital Safety',
+        digital_culture: 'Digital Culture',
+        totalIndex: 'Total Index',
+        literacyIndex: 'Literacy Score',
+        securityIndex: 'Security Score',
+        pillarScores: 'Four-Pillar Scores',
+        scoreScale: 'Scale 1-5',
+        operationalNote: 'Result categories are LDKD Care operational categories, not official Kominfo or UNESCO classifications.',
+        instrumentLabel: 'Adapted instrument based on the 2022 Indonesian Digital Literacy Index and mapped using the UNESCO Digital Literacy Global Framework.',
         resultSummary: 'Result Summary',
         tip: 'Education Tip',
         noTipShort: 'No recommendation is displayed for this category.',
@@ -124,7 +163,7 @@ const copy = {
         startPost: 'Continue to Post-Test',
         comparisonTitle: 'Pre-Test and Post-Test Comparison',
         comparisonSubtitle: 'This summary shows score changes after the education activity. A positive number means understanding improved compared with the initial assessment.',
-        averageChange: 'Average change',
+        averageChange: 'Total index change',
         before: 'Pre-Test',
         after: 'Post-Test',
         point: 'points',
@@ -161,6 +200,26 @@ export default function Result({ submission, comparison, tips }: Props) {
               minute: '2-digit',
           }).format(new Date(submission.submitted_at))
         : '-';
+    const literacyScore = scoreFrom(submission.literacy_score, submission.digital_literacy_percentage);
+    const securityScore = scoreFrom(submission.security_score, submission.data_security_percentage);
+    const pillarScores = {
+        digital_skill: scoreFrom(submission.digital_skill_score),
+        digital_ethics: scoreFrom(submission.digital_ethics_score),
+        digital_safety: scoreFrom(submission.digital_safety_score, submission.data_security_percentage),
+        digital_culture: scoreFrom(submission.digital_culture_score),
+    };
+    const totalIndex = scoreFrom(submission.total_index) || averageScores([
+        pillarScores.digital_skill,
+        pillarScores.digital_ethics,
+        pillarScores.digital_safety,
+        pillarScores.digital_culture,
+    ]) || averageScores([literacyScore, securityScore]);
+    const pillarItems = [
+        { key: 'digital_skill', label: t.digital_skill, score: pillarScores.digital_skill, tone: 'indigo' as const },
+        { key: 'digital_ethics', label: t.digital_ethics, score: pillarScores.digital_ethics, tone: 'violet' as const },
+        { key: 'digital_safety', label: t.digital_safety, score: pillarScores.digital_safety, tone: 'cyan' as const },
+        { key: 'digital_culture', label: t.digital_culture, score: pillarScores.digital_culture, tone: 'emerald' as const },
+    ];
 
     const copyParticipantCode = async () => {
         await navigator.clipboard?.writeText(submission.participant.participant_code);
@@ -190,6 +249,9 @@ export default function Result({ submission, comparison, tips }: Props) {
                                     {t.title}
                                 </h1>
                                 <p className="mt-3 max-w-xl leading-7 text-[#667085]">{t.subtitle}</p>
+                                <p className="mt-3 max-w-xl text-sm font-medium leading-6 text-[#667085]">
+                                    {language === 'id' ? submission.questionnaire_version?.description || t.instrumentLabel : t.instrumentLabel}
+                                </p>
                             </div>
 
                             <div className="mt-8 grid min-w-0 gap-3 sm:grid-cols-3">
@@ -203,18 +265,25 @@ export default function Result({ submission, comparison, tips }: Props) {
                             <p className="text-sm font-bold uppercase tracking-[0.18em] text-[#5B5FEF]">{t.resultSummary}</p>
                             <div className="mt-5 grid min-w-0 gap-4">
                                 <CompactScore
-                                    title={t.digital_literacy}
-                                    percentage={Number(submission.digital_literacy_percentage)}
-                                    category={categoryLabel(t, submission.digital_literacy_category)}
+                                    title={t.totalIndex}
+                                    score={totalIndex}
+                                    category={categoryLabel(t, submission.total_category || submission.digital_literacy_category)}
                                     tone="indigo"
                                 />
                                 <CompactScore
-                                    title={t.data_security}
-                                    percentage={Number(submission.data_security_percentage)}
-                                    category={categoryLabel(t, submission.data_security_category)}
+                                    title={t.literacyIndex}
+                                    score={literacyScore}
+                                    category={categoryLabel(t, submission.literacy_category || submission.digital_literacy_category)}
+                                    tone="indigo"
+                                />
+                                <CompactScore
+                                    title={t.securityIndex}
+                                    score={securityScore}
+                                    category={categoryLabel(t, submission.security_category || submission.data_security_category)}
                                     tone="cyan"
                                 />
                             </div>
+                            <p className="mt-4 text-xs font-semibold leading-5 text-[#667085]">{t.operationalNote}</p>
                         </div>
                     </CardContent>
                 </Card>
@@ -253,6 +322,25 @@ export default function Result({ submission, comparison, tips }: Props) {
                     </CardContent>
                 </Card>
 
+                <Card className="mt-6 min-w-0 border-[#E8ECF3] bg-white shadow-sm">
+                    <CardContent className="min-w-0 p-6">
+                        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+                            <div>
+                                <p className="text-sm font-bold uppercase tracking-[0.18em] text-[#5B5FEF]">{t.pillarScores}</p>
+                                <p className="mt-1 text-sm font-semibold text-[#667085]">{t.scoreScale}</p>
+                            </div>
+                            <div className={`rounded-full border px-4 py-1.5 text-sm font-bold uppercase tracking-widest ${getCategoryClass(submission.total_category || submission.digital_literacy_category)}`}>
+                                {categoryLabel(t, submission.total_category || submission.digital_literacy_category)}
+                            </div>
+                        </div>
+                        <div className="grid min-w-0 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                            {pillarItems.map((pillar) => (
+                                <PillarScoreCard key={pillar.key} title={pillar.label} score={pillar.score} tone={pillar.tone} />
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
+
                 {comparison && (
                     <ComparisonSection
                         comparison={comparison}
@@ -264,9 +352,9 @@ export default function Result({ submission, comparison, tips }: Props) {
                 <div className="mt-6 grid min-w-0 gap-6 md:grid-cols-2">
                     <ScoreCard
                         title={t.digital_literacy}
-                        percentage={Number(submission.digital_literacy_percentage)}
-                        category={submission.digital_literacy_category}
-                        categoryLabel={categoryLabel(t, submission.digital_literacy_category)}
+                        score={literacyScore}
+                        category={submission.literacy_category || submission.digital_literacy_category}
+                        categoryLabel={categoryLabel(t, submission.literacy_category || submission.digital_literacy_category)}
                         tipTitle={t.tip}
                         tip={language === 'id' ? tips.digital_literacy?.content_id : tips.digital_literacy?.content_en || tips.digital_literacy?.content_id}
                         icon={BookOpenCheck}
@@ -278,9 +366,9 @@ export default function Result({ submission, comparison, tips }: Props) {
 
                     <ScoreCard
                         title={t.data_security}
-                        percentage={Number(submission.data_security_percentage)}
-                        category={submission.data_security_category}
-                        categoryLabel={categoryLabel(t, submission.data_security_category)}
+                        score={securityScore}
+                        category={submission.security_category || submission.data_security_category}
+                        categoryLabel={categoryLabel(t, submission.security_category || submission.data_security_category)}
                         tipTitle={t.tip}
                         tip={language === 'id' ? tips.data_security?.content_id : tips.data_security?.content_en || tips.data_security?.content_id}
                         icon={ShieldCheck}
@@ -325,8 +413,8 @@ function MiniInfo({ label, value }: { label: string; value: string }) {
     );
 }
 
-function CompactScore({ title, percentage, category, tone }: { title: string; percentage: number; category: string; tone: 'indigo' | 'cyan' }) {
-    const clamped = clampScore(percentage);
+function CompactScore({ title, score, category, tone }: { title: string; score: number; category: string; tone: 'indigo' | 'cyan' }) {
+    const clamped = clampIndex(score);
 
     return (
         <div className="min-w-0 rounded-2xl border border-[#E8ECF3] bg-white p-4">
@@ -338,10 +426,38 @@ function CompactScore({ title, percentage, category, tone }: { title: string; pe
             </div>
             <div className="flex items-end gap-1">
                 <span className="font-heading text-3xl font-bold text-[#172033]">{clamped}</span>
-                <span className="pb-1 text-sm font-bold text-[#667085]">%</span>
+                <span className="pb-1 text-sm font-bold text-[#667085]">/5</span>
             </div>
             <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-[#EEF2F7]">
-                <div className={`h-full rounded-full ${tone === 'indigo' ? 'bg-[#5B5FEF]' : 'bg-[#38BDF8]'}`} style={{ width: `${clamped}%` }} />
+                <div className={`h-full rounded-full ${tone === 'indigo' ? 'bg-[#5B5FEF]' : 'bg-[#38BDF8]'}`} style={{ width: `${scorePercent(clamped)}%` }} />
+            </div>
+        </div>
+    );
+}
+
+function PillarScoreCard({ title, score, tone }: { title: string; score: number; tone: 'indigo' | 'violet' | 'cyan' | 'emerald' }) {
+    const clamped = clampIndex(score);
+    const classes = {
+        indigo: 'bg-[#F1F3FF] text-[#5B5FEF]',
+        violet: 'bg-violet-50 text-violet-700',
+        cyan: 'bg-[#ECFEFF] text-[#0891B2]',
+        emerald: 'bg-emerald-50 text-emerald-700',
+    };
+    const bars = {
+        indigo: 'bg-[#5B5FEF]',
+        violet: 'bg-violet-500',
+        cyan: 'bg-[#38BDF8]',
+        emerald: 'bg-emerald-500',
+    };
+
+    return (
+        <div className="min-w-0 rounded-2xl border border-[#E8ECF3] bg-[#F8FAFC] p-4">
+            <div className="mb-4 flex items-center justify-between gap-3">
+                <p className="break-words font-heading text-sm font-bold text-[#172033]">{title}</p>
+                <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${classes[tone]}`}>{clamped}/5</span>
+            </div>
+            <div className="h-2.5 overflow-hidden rounded-full bg-white">
+                <div className={`h-full rounded-full ${bars[tone]}`} style={{ width: `${scorePercent(clamped)}%` }} />
             </div>
         </div>
     );
@@ -393,8 +509,17 @@ function ComparisonSection({ comparison, t, reduceMotion }: { comparison: Compar
                         </div>
 
                         <div className="min-w-0 space-y-4 p-6 lg:p-8">
+                            {comparison.total_index && (
+                                <ComparisonMetricCard
+                                    title={t.totalIndex}
+                                    metric={comparison.total_index}
+                                    tone="indigo"
+                                    icon={CheckCircle2}
+                                    t={t}
+                                />
+                            )}
                             <ComparisonMetricCard
-                                title={t.digital_literacy}
+                                title={t.literacyIndex}
                                 metric={comparison.digital_literacy}
                                 tone="indigo"
                                 icon={BookOpenCheck}
@@ -407,6 +532,13 @@ function ComparisonSection({ comparison, t, reduceMotion }: { comparison: Compar
                                 icon={ShieldCheck}
                                 t={t}
                             />
+                            {comparison.pillars && (
+                                <div className="grid min-w-0 gap-3 sm:grid-cols-2">
+                                    {(['digital_skill', 'digital_ethics', 'digital_safety', 'digital_culture'] as const).map((pillar) => (
+                                        <PillarComparisonMini key={pillar} title={t[pillar]} metric={comparison.pillars?.[pillar]} />
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </CardContent>
@@ -428,8 +560,8 @@ function ComparisonMetricCard({
     icon: typeof BookOpenCheck;
     t: typeof copy.id | typeof copy.en;
 }) {
-    const pre = clampScore(metric.pre);
-    const post = clampScore(metric.post);
+    const pre = clampIndex(metric.pre);
+    const post = clampIndex(metric.post);
     const diff = roundScore(metric.diff);
     const toneClass = tone === 'indigo'
         ? {
@@ -456,7 +588,9 @@ function ComparisonMetricCard({
                     <div className="min-w-0">
                         <h3 className="break-words font-heading text-lg font-bold text-[#172033]">{title}</h3>
                         <p className="mt-1 text-xs font-semibold text-[#667085]">
-                            {categoryLabel(t, metric.pre_category)} → {categoryLabel(t, metric.post_category)}
+                            {metric.pre_category && metric.post_category
+                                ? `${categoryLabel(t, metric.pre_category)} -> ${categoryLabel(t, metric.post_category)}`
+                                : `${t.before} -> ${t.after}`}
                         </p>
                     </div>
                 </div>
@@ -472,8 +606,8 @@ function ComparisonMetricCard({
             </div>
 
             <div className="mt-5 grid min-w-0 grid-cols-2 gap-3">
-                <ValueTile label={t.before} value={`${pre}%`} />
-                <ValueTile label={t.after} value={`${post}%`} highlighted />
+                <ValueTile label={t.before} value={`${pre} / 5`} />
+                <ValueTile label={t.after} value={`${post} / 5`} highlighted />
             </div>
         </div>
     );
@@ -484,15 +618,41 @@ function ComparisonBar({ label, value, className }: { label: string; value: numb
         <div className="min-w-0">
             <div className="mb-2 flex items-center justify-between text-sm font-bold text-[#667085]">
                 <span>{label}</span>
-                <span>{value}%</span>
+                <span>{value}/5</span>
             </div>
             <div className="h-3 overflow-hidden rounded-full bg-white">
                 <motion.div
                     className={`h-full rounded-full ${className}`}
                     initial={{ width: 0 }}
-                    animate={{ width: `${value}%` }}
+                    animate={{ width: `${scorePercent(value)}%` }}
                     transition={{ duration: 0.55, ease: 'easeOut' }}
                 />
+            </div>
+        </div>
+    );
+}
+
+function PillarComparisonMini({ title, metric }: { title: string; metric?: ComparisonMetric }) {
+    if (!metric) {
+        return null;
+    }
+
+    const diff = roundScore(metric.diff);
+    const tone = diffTone(diff);
+
+    return (
+        <div className="min-w-0 rounded-2xl border border-[#E8ECF3] bg-[#F8FAFC] p-4">
+            <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                    <p className="break-words font-heading text-sm font-bold text-[#172033]">{title}</p>
+                    <p className="mt-1 text-xs font-semibold text-[#667085]">
+                        {clampIndex(metric.pre)} / 5 {'->'} {clampIndex(metric.post)} / 5
+                    </p>
+                </div>
+                <span className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold ${tone.badge}`}>
+                    <tone.icon className="h-3.5 w-3.5" />
+                    {formatDiff(diff)}
+                </span>
             </div>
         </div>
     );
@@ -509,7 +669,7 @@ function ValueTile({ label, value, highlighted = false }: { label: string; value
 
 function ScoreCard({
     title,
-    percentage,
+    score,
     category,
     categoryLabel,
     tipTitle,
@@ -521,7 +681,7 @@ function ScoreCard({
     noTipLong,
 }: {
     title: string;
-    percentage: number;
+    score: number;
     category: string;
     categoryLabel: string;
     tipTitle: string;
@@ -532,7 +692,8 @@ function ScoreCard({
     noTipShort: string;
     noTipLong: string;
 }) {
-    const clampedPercentage = clampScore(percentage);
+    const clampedScore = clampIndex(score);
+    const scorePercentage = scorePercent(clampedScore);
     const accent = tone === 'indigo' ? '#5B5FEF' : '#38BDF8';
     const soft = tone === 'indigo' ? 'bg-[#F1F3FF] text-[#5B5FEF]' : 'bg-[#ECFEFF] text-[#0891B2]';
 
@@ -557,11 +718,11 @@ function ScoreCard({
                     <div className="grid min-w-0 items-center gap-6 sm:grid-cols-[150px_1fr]">
                         <div
                             className="mx-auto flex h-32 w-32 items-center justify-center rounded-full sm:h-36 sm:w-36"
-                            style={{ background: `conic-gradient(${accent} ${clampedPercentage * 3.6}deg, #EEF2F7 0deg)` }}
+                            style={{ background: `conic-gradient(${accent} ${scorePercentage * 3.6}deg, #EEF2F7 0deg)` }}
                         >
                             <div className="flex h-24 w-24 flex-col items-center justify-center rounded-full bg-white sm:h-28 sm:w-28">
-                                <span className="font-heading text-4xl font-bold text-[#172033]">{clampedPercentage}</span>
-                                <span className="text-xs font-bold text-[#667085]">%</span>
+                                <span className="font-heading text-4xl font-bold text-[#172033]">{clampedScore}</span>
+                                <span className="text-xs font-bold text-[#667085]">/5</span>
                             </div>
                         </div>
 
@@ -594,12 +755,38 @@ function getCategoryClass(category: string) {
     return 'text-rose-700 bg-rose-50 border-rose-200';
 }
 
-function categoryLabel(t: typeof copy.id | typeof copy.en, category: string) {
+function categoryLabel(t: typeof copy.id | typeof copy.en, category?: string | null) {
+    if (!category) {
+        return '-';
+    }
+
     return t.categories[category as keyof typeof t.categories] || category;
 }
 
-function clampScore(value: number) {
-    return Math.max(0, Math.min(100, Math.round(value || 0)));
+function clampIndex(value: number) {
+    return Math.max(0, Math.min(5, Math.round((Number(value) || 0) * 100) / 100));
+}
+
+function scorePercent(value: number) {
+    return Math.max(0, Math.min(100, (Number(value) || 0) / 5 * 100));
+}
+
+function scoreFrom(value?: number | string | null, legacyPercentage?: number | string | null) {
+    const score = Number(value || 0);
+
+    if (score > 0) {
+        return clampIndex(score);
+    }
+
+    const percentage = Number(legacyPercentage || 0);
+
+    return percentage > 0 ? clampIndex(percentage / 20) : 0;
+}
+
+function averageScores(values: number[]) {
+    const available = values.filter((value) => value > 0);
+
+    return available.length > 0 ? clampIndex(available.reduce((sum, value) => sum + value, 0) / available.length) : 0;
 }
 
 function roundScore(value: number) {

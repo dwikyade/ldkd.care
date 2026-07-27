@@ -3,6 +3,8 @@
 namespace App\Http\Requests\Participant;
 
 use App\Models\Question;
+use App\Models\QuestionnaireVersion;
+use App\Models\Submission;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 
@@ -32,10 +34,13 @@ class SubmitQuestionnaireRequest extends FormRequest
                 return;
             }
 
+            $versionId = $this->questionnaireVersionId();
+
             $questions = Question::with(['answerOptions' => function ($query) {
                 $query->where('is_active', true);
             }])
                 ->where('is_active', true)
+                ->when($versionId, fn ($query) => $query->where('questionnaire_version_id', $versionId))
                 ->get();
 
             if ($questions->isEmpty()) {
@@ -66,5 +71,21 @@ class SubmitQuestionnaireRequest extends FormRequest
                 }
             }
         });
+    }
+
+    private function questionnaireVersionId(): ?int
+    {
+        $session = session('participant_session');
+        $submissionId = (int) ($session['submission_id'] ?? 0);
+
+        if ($submissionId > 0) {
+            $submission = Submission::find($submissionId);
+
+            if ($submission?->questionnaire_version_id) {
+                return (int) $submission->questionnaire_version_id;
+            }
+        }
+
+        return QuestionnaireVersion::active()?->id;
     }
 }

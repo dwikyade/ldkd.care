@@ -16,6 +16,7 @@ class Participant extends Model
         'activity_id',
         'participant_code',
         'full_name',
+        'email',
         'role',
         'school_id',
         'class_id',

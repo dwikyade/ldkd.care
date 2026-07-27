@@ -2,6 +2,7 @@ import { Head, Link, useForm } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Card, CardContent } from '@/Components/ui/Card';
 import { Button } from '@/Components/ui/Button';
+import { AdminGuideButton } from '@/Components/admin/AdminGuide';
 import type { Activity } from '@/types';
 import { ArrowLeft, Calendar, Save } from 'lucide-react';
 import type { FormEvent, ReactNode } from 'react';
@@ -53,6 +54,9 @@ export default function Form({ activity }: Props) {
                     {isEditing ? 'Edit Kegiatan' : 'Tambah Kegiatan'}
                 </h1>
                 <p className="mt-1 text-[#667085]">Atur periode kegiatan yang akan digunakan untuk peserta dan hasil kuesioner.</p>
+                <div className="mt-4">
+                    <AdminGuideButton module="activityForm" />
+                </div>
             </div>
 
             <form onSubmit={submit} className="max-w-3xl">
