@@ -2,6 +2,8 @@ import { Head, Link, useForm } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Card, CardContent } from '@/Components/ui/Card';
 import { Button } from '@/Components/ui/Button';
+import ModernSelect from '@/Components/ui/ModernSelect';
+import { AdminGuideButton, AdminTooltip } from '@/Components/admin/AdminGuide';
 import type { AnswerOption, Question, QuestionnaireVersion, ResponseScale } from '@/types';
 import { ArrowLeft, Plus, Save, Trash2 } from 'lucide-react';
 import type { FormEvent, ReactNode } from 'react';
@@ -129,6 +131,9 @@ export default function Form({ question, defaultModule, versions, responseScales
                     {isEditing ? 'Edit Soal' : 'Tambah Soal'}
                 </h1>
                 <p className="mt-1 text-[#667085]">Kelola pertanyaan dan bobot jawaban tanpa mengubah mekanisme perhitungan skor.</p>
+                <div className="mt-4">
+                    <AdminGuideButton module="questionForm" />
+                </div>
             </div>
 
             <form onSubmit={submit} className="max-w-5xl space-y-6">
@@ -140,10 +145,13 @@ export default function Form({ question, defaultModule, versions, responseScales
                         </div>
 
                         <div className="grid gap-5 md:grid-cols-2">
-                            <Field label="Versi Instrumen" error={form.errors.questionnaire_version_id}>
-                                <select
+                            <Field
+                                label={<LabelWithHelp label="Versi Instrumen" help="Versi mengunci set soal yang dipakai submission. Draft peserta memakai versi saat draft pertama dibuat." />}
+                                error={form.errors.questionnaire_version_id}
+                            >
+                                <ModernSelect
                                     value={form.data.questionnaire_version_id}
-                                    onChange={(event) => form.setData('questionnaire_version_id', Number(event.target.value) || '')}
+                                    onChange={(value) => form.setData('questionnaire_version_id', Number(value) || '')}
                                     className={inputClass}
                                 >
                                     <option value="">Versi aktif sistem</option>
@@ -152,24 +160,27 @@ export default function Form({ question, defaultModule, versions, responseScales
                                             {version.name} ({version.code})
                                         </option>
                                     ))}
-                                </select>
+                                </ModernSelect>
                             </Field>
 
                             <Field label="Modul Kuesioner" error={form.errors.module}>
-                                <select
+                                <ModernSelect
                                     value={form.data.module}
-                                    onChange={(event) => handleModuleChange(event.target.value as ModuleKey)}
+                                    onChange={(value) => handleModuleChange(value as ModuleKey)}
                                     className={inputClass}
                                 >
                                     <option value="digital_literacy">Literasi Digital</option>
                                     <option value="data_security">Keamanan Digital</option>
-                                </select>
+                                </ModernSelect>
                             </Field>
 
-                            <Field label="Pilar Kominfo" error={form.errors.kominfo_pillar}>
-                                <select
+                            <Field
+                                label={<LabelWithHelp label="Pilar Kominfo" help="Pilar menentukan skor internal: Digital Skill, Digital Ethics, Digital Safety, atau Digital Culture." />}
+                                error={form.errors.kominfo_pillar}
+                            >
+                                <ModernSelect
                                     value={form.data.kominfo_pillar}
-                                    onChange={(event) => handlePillarChange(event.target.value as PillarKey)}
+                                    onChange={(value) => handlePillarChange(value as PillarKey)}
                                     className={inputClass}
                                 >
                                     {pillarOptions.map((pillar) => (
@@ -177,13 +188,16 @@ export default function Form({ question, defaultModule, versions, responseScales
                                             {pillar.label}
                                         </option>
                                     ))}
-                                </select>
+                                </ModernSelect>
                             </Field>
 
-                            <Field label="Skala Jawaban" error={form.errors.response_scale_id}>
-                                <select
+                            <Field
+                                label={<LabelWithHelp label="Skala Jawaban" help="Digital Skill dan Digital Safety memakai skala kemampuan. Digital Ethics dan Digital Culture memakai skala persetujuan." />}
+                                error={form.errors.response_scale_id}
+                            >
+                                <ModernSelect
                                     value={form.data.response_scale_id}
-                                    onChange={(event) => form.setData('response_scale_id', Number(event.target.value) || '')}
+                                    onChange={(value) => form.setData('response_scale_id', Number(value) || '')}
                                     className={inputClass}
                                 >
                                     <option value="">Tanpa skala tersimpan</option>
@@ -192,60 +206,64 @@ export default function Form({ question, defaultModule, versions, responseScales
                                             {scale.name_id} ({scale.code})
                                         </option>
                                     ))}
-                                </select>
+                                </ModernSelect>
                             </Field>
 
                             <Field label="Tipe Pertanyaan" error={form.errors.question_type}>
-                                <select
+                                <ModernSelect
                                     value={form.data.question_type}
-                                    onChange={(event) => form.setData('question_type', event.target.value)}
+                                    onChange={(value) => form.setData('question_type', value)}
                                     className={inputClass}
                                 >
                                     <option value="self_assessment">Self Assessment</option>
                                     <option value="scenario">Skenario</option>
                                     <option value="knowledge">Pengetahuan</option>
-                                </select>
+                                </ModernSelect>
                             </Field>
 
                             <Field label="Assessment Type" error={form.errors.assessment_type}>
-                                <select
+                                <ModernSelect
                                     value={form.data.assessment_type}
-                                    onChange={(event) => form.setData('assessment_type', event.target.value)}
+                                    onChange={(value) => form.setData('assessment_type', value)}
                                     className={inputClass}
                                 >
                                     <option value="self_assessment">Self Assessment</option>
                                     <option value="scenario">Skenario</option>
                                     <option value="knowledge">Pengetahuan</option>
-                                </select>
+                                </ModernSelect>
                             </Field>
 
                             <Field label="Difficulty Level" error={form.errors.difficulty_level}>
-                                <select
+                                <ModernSelect
                                     value={form.data.difficulty_level}
-                                    onChange={(event) => form.setData('difficulty_level', event.target.value)}
+                                    onChange={(value) => form.setData('difficulty_level', value)}
                                     className={inputClass}
                                 >
                                     <option value="">Tidak diatur</option>
                                     <option value="basic">Basic</option>
                                     <option value="intermediate">Intermediate</option>
                                     <option value="advanced">Advanced</option>
-                                </select>
+                                </ModernSelect>
                             </Field>
 
                             <Field label="Proficiency Level" error={form.errors.proficiency_level}>
-                                <select
+                                <ModernSelect
                                     value={form.data.proficiency_level}
-                                    onChange={(event) => form.setData('proficiency_level', event.target.value)}
+                                    onChange={(value) => form.setData('proficiency_level', value)}
                                     className={inputClass}
                                 >
                                     <option value="">Tidak diatur</option>
                                     <option value="foundation">Foundation</option>
                                     <option value="intermediate">Intermediate</option>
                                     <option value="advanced">Advanced</option>
-                                </select>
+                                </ModernSelect>
                             </Field>
 
-                            <Field label="Kode Kompetensi UNESCO" error={form.errors.unesco_competence_code} hint="Contoh: 1.2 atau 4.2. Mapping detail tersimpan pada instrumen.">
+                            <Field
+                                label={<LabelWithHelp label="Kode Kompetensi UNESCO" help="Kode ini membantu memetakan soal ke kerangka UNESCO DLGF. Contoh: 1.2 untuk evaluasi informasi atau 4.2 untuk data pribadi." />}
+                                error={form.errors.unesco_competence_code}
+                                hint="Contoh: 1.2 atau 4.2. Mapping detail tersimpan pada instrumen."
+                            >
                                 <input
                                     value={form.data.unesco_competence_code}
                                     onChange={(event) => form.setData('unesco_competence_code', event.target.value)}
@@ -275,7 +293,10 @@ export default function Form({ question, defaultModule, versions, responseScales
                                     className="mt-1 h-5 w-5 rounded border-slate-300 text-[#5B5FEF] focus:ring-[#5B5FEF]"
                                 />
                                 <span>
-                                    <span className="block font-bold text-[#172033]">Masuk perhitungan skor</span>
+                                    <span className="flex items-center gap-2 font-bold text-[#172033]">
+                                        Masuk perhitungan skor
+                                        <AdminTooltip content="Jika aktif, jawaban pada soal ini ikut dihitung ke skor pilar dan indeks. Nonaktifkan hanya untuk butir instruksi atau non-skor." />
+                                    </span>
                                     <span className="text-sm text-[#667085]">Nonaktifkan hanya untuk butir instruksi atau validasi non-skor.</span>
                                 </span>
                             </label>
@@ -288,7 +309,10 @@ export default function Form({ question, defaultModule, versions, responseScales
                                     className="mt-1 h-5 w-5 rounded border-slate-300 text-[#5B5FEF] focus:ring-[#5B5FEF]"
                                 />
                                 <span>
-                                    <span className="block font-bold text-[#172033]">Reverse scoring</span>
+                                    <span className="flex items-center gap-2 font-bold text-[#172033]">
+                                        Reverse scoring
+                                        <AdminTooltip content="Reverse scoring membalik bobot jawaban saat perhitungan. Gunakan hanya untuk pertanyaan negatif atau risiko agar skor tetap searah." />
+                                    </span>
                                     <span className="text-sm text-[#667085]">Bobot dibalik saat scoring, tetapi snapshot jawaban tetap tersimpan.</span>
                                 </span>
                             </label>
@@ -437,7 +461,16 @@ function defaultOptions(pillar: PillarKey): AnswerOption[] {
     ];
 }
 
-function Field({ label, error, hint, children }: { label: string; error?: string; hint?: string; children: ReactNode }) {
+function LabelWithHelp({ label, help }: { label: string; help: string }) {
+    return (
+        <span className="inline-flex items-center gap-2">
+            {label}
+            <AdminTooltip content={help} />
+        </span>
+    );
+}
+
+function Field({ label, error, hint, children }: { label: ReactNode; error?: string; hint?: string; children: ReactNode }) {
     return (
         <div className="space-y-2">
             <label className="text-sm font-bold text-[#172033]">{label}</label>

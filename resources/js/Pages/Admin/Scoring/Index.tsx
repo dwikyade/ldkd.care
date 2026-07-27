@@ -2,6 +2,7 @@ import { Head, useForm } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Button } from '@/Components/ui/Button';
 import { Card, CardContent } from '@/Components/ui/Card';
+import { AdminGuideButton, AdminTooltip } from '@/Components/admin/AdminGuide';
 import type { CategoryThreshold, EducationalTip } from '@/types';
 import { BookOpenCheck, Save, Scale, ShieldCheck } from 'lucide-react';
 import type { FormEvent, ReactNode } from 'react';
@@ -103,10 +104,13 @@ export default function Index({ modules, flash }: Props) {
                         Kelola ambang kategori hasil dan tips edukasi. Bobot jawaban tiap opsi tetap dikelola dari Bank Soal.
                     </p>
                 </div>
-                <Button type="submit" form="scoring-form" disabled={form.processing} className="gap-2">
-                    <Save className="h-4 w-4" />
-                    {form.processing ? 'Menyimpan...' : 'Simpan Pengaturan'}
-                </Button>
+                <div className="flex flex-wrap gap-3">
+                    <AdminGuideButton module="scoring" />
+                    <Button type="submit" form="scoring-form" disabled={form.processing} className="gap-2">
+                        <Save className="h-4 w-4" />
+                        {form.processing ? 'Menyimpan...' : 'Simpan Pengaturan'}
+                    </Button>
+                </div>
             </div>
 
             {flash?.success && <Alert tone="success">{flash.success}</Alert>}
@@ -157,25 +161,26 @@ export default function Index({ modules, flash }: Props) {
                                                         checked={item?.is_active ?? false}
                                                         onChange={(checked) => updateThreshold(threshold.id, 'is_active', checked)}
                                                         label="Aktif"
+                                                        help="Jika nonaktif, rentang kategori ini tidak dipakai saat sistem mencari kategori skor."
                                                     />
                                                 </div>
                                                 <div className="grid grid-cols-2 gap-3">
-                                                    <Field label="Min %">
+                                                    <Field label={<LabelWithHelp label="Min" help="Batas skor terendah untuk kategori ini. Instrumen final memakai rentang 1.00 sampai 5.00." />}>
                                                         <input
                                                             type="number"
                                                             min="0"
-                                                            max="100"
+                                                            max="5"
                                                             step="0.01"
                                                             value={item?.minimum_percentage || ''}
                                                             onChange={(event) => updateThreshold(threshold.id, 'minimum_percentage', event.target.value)}
                                                             className={inputClass}
                                                         />
                                                     </Field>
-                                                    <Field label="Max %">
+                                                    <Field label={<LabelWithHelp label="Max" help="Batas skor tertinggi untuk kategori ini. Pastikan tidak tumpang tindih dengan kategori lain." />}>
                                                         <input
                                                             type="number"
                                                             min="0"
-                                                            max="100"
+                                                            max="5"
                                                             step="0.01"
                                                             value={item?.maximum_percentage || ''}
                                                             onChange={(event) => updateThreshold(threshold.id, 'maximum_percentage', event.target.value)}
@@ -199,7 +204,7 @@ export default function Index({ modules, flash }: Props) {
                                                         <p className="font-heading text-lg font-bold text-[#172033]">Tips {categoryLabels[tip.category]}</p>
                                                         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#667085]">{tip.category}</p>
                                                     </div>
-                                                    <Toggle checked={item?.is_active ?? false} onChange={(checked) => updateTip(tip.id, 'is_active', checked)} label="Aktif" />
+                                                    <Toggle checked={item?.is_active ?? false} onChange={(checked) => updateTip(tip.id, 'is_active', checked)} label="Aktif" help="Jika aktif, tips ini dapat muncul di halaman hasil peserta sesuai kategori." />
                                                 </div>
                                                 <Field label="Bahasa Indonesia">
                                                     <textarea
@@ -245,7 +250,16 @@ function SummaryItem({ icon, label, value }: { icon: ReactNode; label: string; v
     );
 }
 
-function Field({ label, children }: { label: string; children: ReactNode }) {
+function LabelWithHelp({ label, help }: { label: string; help: string }) {
+    return (
+        <span className="inline-flex items-center gap-2">
+            {label}
+            <AdminTooltip content={help} />
+        </span>
+    );
+}
+
+function Field({ label, children }: { label: ReactNode; children: ReactNode }) {
     return (
         <label className="block text-sm font-bold text-[#172033]">
             {label}
@@ -254,7 +268,7 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
     );
 }
 
-function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (checked: boolean) => void; label: string }) {
+function Toggle({ checked, onChange, label, help }: { checked: boolean; onChange: (checked: boolean) => void; label: string; help?: string }) {
     return (
         <label className="inline-flex items-center gap-2 text-xs font-bold text-[#667085]">
             <input
@@ -264,6 +278,7 @@ function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (che
                 className="h-4 w-4 rounded border-slate-300 text-[#5B5FEF] focus:ring-[#5B5FEF]"
             />
             {label}
+            {help && <AdminTooltip content={help} />}
         </label>
     );
 }

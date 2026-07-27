@@ -2,6 +2,7 @@ import { Head, Link, router, useForm } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Card, CardContent } from '@/Components/ui/Card';
 import { Button } from '@/Components/ui/Button';
+import { AdminGuideButton } from '@/Components/admin/AdminGuide';
 import type { Classroom, School } from '@/types';
 import { ArrowLeft, Plus, Save, School as SchoolIcon, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -108,6 +109,9 @@ export default function Form({ school, flash }: Props) {
                     {isEditing ? 'Edit Sekolah' : 'Tambah Sekolah'}
                 </h1>
                 <p className="mt-1 text-[#667085]">Data sekolah digunakan untuk mengelompokkan peserta, kelas, dan hasil evaluasi.</p>
+                <div className="mt-4">
+                    <AdminGuideButton module="schoolForm" />
+                </div>
             </div>
 
             {flash?.success && <Alert tone="success">{flash.success}</Alert>}
@@ -245,7 +249,7 @@ export default function Form({ school, flash }: Props) {
                                                     <Button type="button" variant="outline" size="sm" onClick={() => updateClassroom(classroom)}>
                                                         Simpan
                                                     </Button>
-                                                    <Button type="button" variant="outline" size="sm" onClick={() => deleteClassroom(classroom)} className="text-[#F43F5E]">
+                                                    <Button type="button" variant="outline" size="sm" onClick={() => deleteClassroom(classroom)} className="text-[#F43F5E]" title="Hati-hati: menghapus kelas dapat memengaruhi data peserta yang terhubung.">
                                                         <Trash2 className="h-4 w-4" />
                                                     </Button>
                                                 </div>

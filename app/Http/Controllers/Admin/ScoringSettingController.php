@@ -27,8 +27,8 @@ class ScoringSettingController extends Controller
         $validated = $request->validate([
             'thresholds' => ['required', 'array'],
             'thresholds.*.id' => ['required', 'integer', 'exists:category_thresholds,id'],
-            'thresholds.*.minimum_percentage' => ['required', 'numeric', 'min:0', 'max:100'],
-            'thresholds.*.maximum_percentage' => ['required', 'numeric', 'min:0', 'max:100'],
+            'thresholds.*.minimum_percentage' => ['required', 'numeric', 'min:0', 'max:5'],
+            'thresholds.*.maximum_percentage' => ['required', 'numeric', 'min:0', 'max:5'],
             'thresholds.*.is_active' => ['boolean'],
             'tips' => ['required', 'array'],
             'tips.*.id' => ['required', 'integer', 'exists:educational_tips,id'],

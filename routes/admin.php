@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\ComparisonController;
 use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\ClassroomController;
 use App\Http\Controllers\Admin\ExportController;
+use App\Http\Controllers\Admin\GuideController;
 use App\Http\Controllers\Admin\ScoringSettingController;
 
 Route::prefix('admin')->name('admin.')->group(function () {
@@ -24,6 +25,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
         
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+        Route::get('/panduan', [GuideController::class, 'index'])->name('guide.index');
         
         // Master Data & Activities
         Route::resource('activities', \App\Http\Controllers\Admin\ActivityController::class)->except(['show']);
@@ -33,6 +35,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('schools', \App\Http\Controllers\Admin\SchoolController::class)->except(['show']);
         Route::post('participants/import', [ParticipantController::class, 'import'])->name('participants.import');
         Route::resource('participants', ParticipantController::class)->except(['show']);
+        Route::get('questions/print', [\App\Http\Controllers\Admin\QuestionController::class, 'printable'])->name('questions.print');
         Route::resource('questions', \App\Http\Controllers\Admin\QuestionController::class)->except(['show']);
         Route::get('scoring', [ScoringSettingController::class, 'index'])->name('scoring.index');
         Route::put('scoring', [ScoringSettingController::class, 'update'])->name('scoring.update');

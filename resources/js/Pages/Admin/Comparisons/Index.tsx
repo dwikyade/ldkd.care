@@ -2,6 +2,8 @@ import { Head, Link, router, useForm } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Button } from '@/Components/ui/Button';
 import { Card, CardContent } from '@/Components/ui/Card';
+import ModernSelect from '@/Components/ui/ModernSelect';
+import { AdminGuideButton } from '@/Components/admin/AdminGuide';
 import type { Activity, Paginated, School } from '@/types';
 import {
     ArrowUpRight,
@@ -77,12 +79,15 @@ export default function Index({ comparisons, filters, activities, schools, summa
                     <h1 className="mt-2 font-heading text-3xl font-bold tracking-[-0.01em] text-[#172033]">Perbandingan Pre-Test dan Post-Test</h1>
                     <p className="mt-1 text-[#667085]">Bandingkan peningkatan literasi digital dan keamanan digital berdasarkan kode peserta yang sama.</p>
                 </div>
-                <Button asChild className="gap-2">
-                    <a href={route('admin.comparisons.export', filterForm.data)}>
-                        <Download className="h-4 w-4" />
-                        Export CSV
-                    </a>
-                </Button>
+                <div className="flex flex-wrap gap-3">
+                    <AdminGuideButton module="comparisons" />
+                    <Button asChild className="gap-2">
+                        <a href={route('admin.comparisons.export', filterForm.data)}>
+                            <Download className="h-4 w-4" />
+                            Export CSV
+                        </a>
+                    </Button>
+                </div>
             </div>
 
             <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
@@ -202,9 +207,9 @@ const searchInputClass = 'h-11 w-full rounded-xl border border-[#E8ECF3] bg-whit
 
 function Select({ value, onChange, children }: { value: string; onChange: (value: string) => void; children: ReactNode }) {
     return (
-        <select value={value} onChange={(event) => onChange(event.target.value)} className={inputClass}>
+        <ModernSelect value={value} onChange={onChange} className={inputClass}>
             {children}
-        </select>
+        </ModernSelect>
     );
 }
 

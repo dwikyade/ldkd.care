@@ -2,6 +2,8 @@ import { Head, Link, useForm } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Button } from '@/Components/ui/Button';
 import { Card, CardContent } from '@/Components/ui/Card';
+import ModernSelect from '@/Components/ui/ModernSelect';
+import { AdminGuideButton } from '@/Components/admin/AdminGuide';
 import { Activity, Participant, School } from '@/types';
 import { ArrowLeft, Save, Sparkles } from 'lucide-react';
 import { useMemo } from 'react';
@@ -56,18 +58,21 @@ export default function Form({ participant, activities, schools }: Props) {
                     {isEditing ? 'Edit Peserta' : 'Tambah Peserta'}
                 </h1>
                 <p className="mt-1 text-[#667085]">Kode peserta dapat diisi manual atau dikosongkan untuk dibuat otomatis.</p>
+                <div className="mt-4">
+                    <AdminGuideButton module="participantForm" />
+                </div>
             </div>
 
             <form onSubmit={submit} className="max-w-4xl">
                 <Card>
                     <CardContent className="grid gap-6 p-6 md:grid-cols-2">
                         <Field label="Kegiatan" error={form.errors.activity_id}>
-                            <select value={form.data.activity_id} onChange={(event) => form.setData('activity_id', event.target.value)} className={inputClass}>
+                            <ModernSelect value={form.data.activity_id} onChange={(value) => form.setData('activity_id', value)} className={inputClass}>
                                 <option value="">Pilih kegiatan</option>
                                 {activities.map((activity) => (
                                     <option key={activity.id} value={activity.id}>{activity.name}</option>
                                 ))}
-                            </select>
+                            </ModernSelect>
                         </Field>
 
                         <Field label="Kode Peserta" error={form.errors.participant_code} hint={!isEditing ? 'Kosongkan untuk generate otomatis.' : undefined}>
@@ -87,17 +92,17 @@ export default function Form({ participant, activities, schools }: Props) {
                         </Field>
 
                         <Field label="Peran" error={form.errors.role}>
-                            <select value={form.data.role} onChange={(event) => form.setData('role', event.target.value as 'student' | 'teacher')} className={inputClass}>
+                            <ModernSelect value={form.data.role} onChange={(value) => form.setData('role', value as 'student' | 'teacher')} className={inputClass}>
                                 <option value="student">Siswa</option>
                                 <option value="teacher">Guru</option>
-                            </select>
+                            </ModernSelect>
                         </Field>
 
                         <Field label="Sekolah" error={form.errors.school_id}>
-                            <select
+                            <ModernSelect
                                 value={form.data.school_id}
-                                onChange={(event) => {
-                                    form.setData('school_id', event.target.value);
+                                onChange={(value) => {
+                                    form.setData('school_id', value);
                                     form.setData('class_id', '');
                                 }}
                                 className={inputClass}
@@ -106,24 +111,24 @@ export default function Form({ participant, activities, schools }: Props) {
                                 {schools.map((school) => (
                                     <option key={school.id} value={school.id}>{school.name}</option>
                                 ))}
-                            </select>
+                            </ModernSelect>
                         </Field>
 
                         <Field label="Kelas" error={form.errors.class_id}>
-                            <select value={form.data.class_id || ''} onChange={(event) => form.setData('class_id', event.target.value)} className={inputClass}>
+                            <ModernSelect value={form.data.class_id || ''} onChange={(value) => form.setData('class_id', value)} className={inputClass}>
                                 <option value="">Tidak ada / Guru</option>
                                 {selectedSchool?.classes?.map((classroom) => (
                                     <option key={classroom.id} value={classroom.id}>{classroom.name}</option>
                                 ))}
-                            </select>
+                            </ModernSelect>
                         </Field>
 
                         <Field label="Jenis Kelamin" error={form.errors.gender}>
-                            <select value={form.data.gender || ''} onChange={(event) => form.setData('gender', event.target.value)} className={inputClass}>
+                            <ModernSelect value={form.data.gender || ''} onChange={(value) => form.setData('gender', value)} className={inputClass}>
                                 <option value="">Opsional</option>
                                 <option value="male">Laki-laki</option>
                                 <option value="female">Perempuan</option>
-                            </select>
+                            </ModernSelect>
                         </Field>
 
                         <Field label="Jabatan / Posisi" error={form.errors.position}>

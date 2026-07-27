@@ -2,8 +2,10 @@ import { Head, Link, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Card } from '@/Components/ui/Card';
 import { Button } from '@/Components/ui/Button';
+import ModernSelect from '@/Components/ui/ModernSelect';
+import { AdminGuideButton } from '@/Components/admin/AdminGuide';
 import type { Paginated, Question, QuestionnaireVersion } from '@/types';
-import { Edit2, Laptop, Plus, Shield, Trash2 } from 'lucide-react';
+import { Edit2, Laptop, Plus, Printer, Shield, Trash2 } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 interface Props {
@@ -20,6 +22,12 @@ interface Props {
 }
 
 export default function Index({ questions, currentModule, currentPillar, currentVersionId, versions, pillarOptions, flash }: Props) {
+    const printParams = {
+        module: 'all',
+        ...(currentPillar ? { pillar: currentPillar } : {}),
+        ...(currentVersionId ? { version_id: currentVersionId } : {}),
+    };
+
     const handleDelete = (question: Question) => {
         if (confirm('Hapus soal ini?')) {
             router.delete(route('admin.questions.destroy', question.id), { preserveScroll: true });
@@ -36,12 +44,21 @@ export default function Index({ questions, currentModule, currentPillar, current
                     <h1 className="mt-2 font-heading text-3xl font-bold tracking-[-0.01em] text-[#172033]">Bank Soal Kuesioner</h1>
                     <p className="mt-1 text-[#667085]">Kelola soal, pilar Kominfo, skala jawaban, dan mapping UNESCO untuk instrumen kuesioner.</p>
                 </div>
-                <Button asChild className="gap-2">
-                    <Link href={route('admin.questions.create', { module: currentModule })}>
-                        <Plus className="h-4 w-4" />
-                        Tambah Soal
-                    </Link>
-                </Button>
+                <div className="flex flex-wrap gap-3">
+                    <AdminGuideButton module="questions" />
+                    <Button asChild variant="outline" className="gap-2">
+                        <a href={route('admin.questions.print', printParams)} target="_blank" rel="noreferrer">
+                            <Printer className="h-4 w-4" />
+                            Cetak Kuesioner
+                        </a>
+                    </Button>
+                    <Button asChild className="gap-2">
+                        <Link href={route('admin.questions.create', { module: currentModule })}>
+                            <Plus className="h-4 w-4" />
+                            Tambah Soal
+                        </Link>
+                    </Button>
+                </div>
             </div>
 
             {flash?.success && <Alert tone="success">{flash.success}</Alert>}
@@ -65,11 +82,11 @@ export default function Index({ questions, currentModule, currentPillar, current
             <Card className="mb-6">
                 <div className="grid gap-4 p-4 md:grid-cols-2 lg:grid-cols-3">
                     <Field label="Filter Pilar">
-                        <select
+                        <ModernSelect
                             value={currentPillar || ''}
-                            onChange={(event) => router.get(route('admin.questions.index'), {
+                            onChange={(value) => router.get(route('admin.questions.index'), {
                                 module: currentModule,
-                                pillar: event.target.value || undefined,
+                                pillar: value || undefined,
                                 version_id: currentVersionId || undefined,
                             }, { preserveState: true, preserveScroll: true })}
                             className={inputClass}
@@ -80,15 +97,15 @@ export default function Index({ questions, currentModule, currentPillar, current
                                     {pillar.label}
                                 </option>
                             ))}
-                        </select>
+                        </ModernSelect>
                     </Field>
                     <Field label="Filter Versi Instrumen">
-                        <select
+                        <ModernSelect
                             value={currentVersionId || ''}
-                            onChange={(event) => router.get(route('admin.questions.index'), {
+                            onChange={(value) => router.get(route('admin.questions.index'), {
                                 module: currentModule,
                                 pillar: currentPillar || undefined,
-                                version_id: Number(event.target.value) || undefined,
+                                version_id: Number(value) || undefined,
                             }, { preserveState: true, preserveScroll: true })}
                             className={inputClass}
                         >
@@ -98,7 +115,7 @@ export default function Index({ questions, currentModule, currentPillar, current
                                     {version.name} ({version.status})
                                 </option>
                             ))}
-                        </select>
+                        </ModernSelect>
                     </Field>
                 </div>
             </Card>
@@ -167,7 +184,7 @@ export default function Index({ questions, currentModule, currentPillar, current
                                                     Edit
                                                 </Link>
                                             </Button>
-                                            <Button type="button" variant="outline" size="sm" onClick={() => handleDelete(question)} className="text-[#F43F5E]">
+                                            <Button type="button" variant="outline" size="sm" onClick={() => handleDelete(question)} className="text-[#F43F5E]" title="Hati-hati: hapus soal hanya jika tidak dibutuhkan lagi. Untuk perubahan besar, gunakan versioning instrumen.">
                                                 <Trash2 className="h-4 w-4" />
                                             </Button>
                                         </div>

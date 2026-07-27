@@ -2,6 +2,8 @@ import { Head, Link, router, useForm } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Button } from '@/Components/ui/Button';
 import { Card } from '@/Components/ui/Card';
+import ModernSelect from '@/Components/ui/ModernSelect';
+import { AdminGuideButton } from '@/Components/admin/AdminGuide';
 import type { AuditLog, Paginated } from '@/types';
 import { History, Search } from 'lucide-react';
 import type { FormEvent, ReactNode } from 'react';
@@ -36,10 +38,13 @@ export default function Index({ logs, filters, actions, entityTypes }: Props) {
         <AdminLayout>
             <Head title="Audit Log" />
 
-            <div className="mb-8">
-                <p className="text-sm font-bold uppercase tracking-[0.18em] text-[#5B5FEF]">Keamanan Sistem</p>
-                <h1 className="mt-2 font-heading text-3xl font-bold tracking-[-0.01em] text-[#172033]">Audit Log</h1>
-                <p className="mt-1 text-[#667085]">Pantau aktivitas admin seperti login, perubahan data, dan export laporan.</p>
+            <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                <div>
+                    <p className="text-sm font-bold uppercase tracking-[0.18em] text-[#5B5FEF]">Keamanan Sistem</p>
+                    <h1 className="mt-2 font-heading text-3xl font-bold tracking-[-0.01em] text-[#172033]">Audit Log</h1>
+                    <p className="mt-1 text-[#667085]">Pantau aktivitas admin seperti login, perubahan data, dan export laporan.</p>
+                </div>
+                <AdminGuideButton module="audit" />
             </div>
 
             <Card className="mb-6">
@@ -134,9 +139,9 @@ const searchInputClass = 'h-11 w-full rounded-xl border border-[#E8ECF3] bg-whit
 
 function Select({ value, onChange, children }: { value: string; onChange: (value: string) => void; children: ReactNode }) {
     return (
-        <select value={value} onChange={(event) => onChange(event.target.value)} className={inputClass}>
+        <ModernSelect value={value} onChange={onChange} className={inputClass}>
             {children}
-        </select>
+        </ModernSelect>
     );
 }
 

@@ -2,6 +2,7 @@ import { Head } from '@inertiajs/react';
 import { motion, useReducedMotion } from 'framer-motion';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/Card';
+import { AdminGuideButton, AdminTooltip } from '@/Components/admin/AdminGuide';
 import {
     Activity,
     BarChart3,
@@ -133,9 +134,9 @@ export default function Dashboard({ stats, chartData, recentActivities }: Props)
         { label: t.cards.totalParticipants, value: stats.total_participants, icon: Users, tone: 'indigo' },
         { label: t.cards.preTest, value: stats.total_pre_test, icon: FileQuestion, tone: 'cyan' },
         { label: t.cards.postTest, value: stats.total_post_test, icon: CheckCircle2, tone: 'emerald' },
-        { label: t.cards.drafts, value: stats.draft_submissions ?? 0, icon: FileQuestion, tone: 'amber' },
-        { label: t.cards.complete, value: stats.complete_participants, icon: CheckCircle2, tone: 'emerald' },
-        { label: t.cards.incomplete, value: stats.incomplete_participants, icon: UserX, tone: 'amber' },
+        { label: t.cards.drafts, value: stats.draft_submissions ?? 0, icon: FileQuestion, tone: 'amber', help: 'Draft adalah pengisian yang sudah dimulai tetapi belum dikirim. Jangan dipakai untuk laporan akhir.' },
+        { label: t.cards.complete, value: stats.complete_participants, icon: CheckCircle2, tone: 'emerald', help: 'Peserta lengkap memiliki Pre-Test dan Post-Test completed.' },
+        { label: t.cards.incomplete, value: stats.incomplete_participants, icon: UserX, tone: 'amber', help: 'Belum lengkap berarti salah satu dari Pre-Test atau Post-Test belum completed.' },
         { label: t.cards.avgLiteracy, value: `${stats.avg_digital_literacy}%`, icon: BookOpen, tone: 'indigo' },
         { label: t.cards.avgSecurity, value: `${stats.avg_data_security}%`, icon: ShieldCheck, tone: 'cyan' },
         { label: t.cards.schools, value: stats.total_schools, icon: School, tone: 'slate' },
@@ -150,9 +151,12 @@ export default function Dashboard({ stats, chartData, recentActivities }: Props)
                     <h1 className="font-heading text-3xl font-bold tracking-[-0.01em] text-[#172033]">{t.title}</h1>
                     <p className="mt-1 text-[#667085]">{t.subtitle}</p>
                 </div>
-                <div className="inline-flex w-fit items-center gap-2 rounded-xl border border-[#E8ECF3] bg-white px-4 py-2 text-sm font-semibold text-[#667085] shadow-sm">
-                    <Activity className="h-4 w-4 text-[#5B5FEF]" />
-                    {stats.active_activities} {t.activeActivities}
+                <div className="flex flex-wrap items-center gap-3">
+                    <AdminGuideButton module="dashboard" />
+                    <div className="inline-flex w-fit items-center gap-2 rounded-xl border border-[#E8ECF3] bg-white px-4 py-2 text-sm font-semibold text-[#667085] shadow-sm">
+                        <Activity className="h-4 w-4 text-[#5B5FEF]" />
+                        {stats.active_activities} {t.activeActivities}
+                    </div>
                 </div>
             </div>
 
@@ -170,7 +174,10 @@ export default function Dashboard({ stats, chartData, recentActivities }: Props)
                             <Card className={`border-l-4 ${toneBorder(item.tone)}`}>
                                 <CardContent className="flex items-center justify-between p-6">
                                     <div>
-                                        <p className="text-sm font-medium text-[#667085]">{item.label}</p>
+                                        <p className="inline-flex items-center gap-2 text-sm font-medium text-[#667085]">
+                                            {item.label}
+                                            {'help' in item && item.help && <AdminTooltip content={item.help} />}
+                                        </p>
                                         <h3 className="mt-1 font-heading text-3xl font-bold text-[#172033]">{item.value}</h3>
                                     </div>
                                     <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${toneIcon(item.tone)}`}>

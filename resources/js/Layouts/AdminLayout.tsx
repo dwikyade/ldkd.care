@@ -14,7 +14,8 @@ import {
     ClipboardList,
     Scale,
     History,
-    Globe2
+    Globe2,
+    BookOpen
 } from 'lucide-react';
 import BrandMark from '@/Components/ldkd/BrandMark';
 
@@ -36,6 +37,7 @@ const adminCopy = {
         comparisons: 'Perbandingan',
         export: 'Export',
         audit: 'Audit Log',
+        guide: 'Panduan',
         admin: 'Administrator',
         logout: 'Keluar',
         closeMenu: 'Tutup menu admin',
@@ -52,6 +54,7 @@ const adminCopy = {
         comparisons: 'Comparisons',
         export: 'Export',
         audit: 'Audit Log',
+        guide: 'Guide',
         admin: 'Administrator',
         logout: 'Logout',
         closeMenu: 'Close admin menu',
@@ -73,6 +76,7 @@ export default function AdminLayout({ children }: Props) {
 
     const navItems = [
         { name: t.dashboard, href: route('admin.dashboard'), icon: LayoutDashboard },
+        { name: t.guide, href: route('admin.guide.index'), icon: BookOpen },
         { name: t.activities, href: route('admin.activities.index'), icon: CalendarDays },
         { name: t.schools, href: route('admin.schools.index'), icon: School },
         { name: t.participants, href: route('admin.participants.index'), icon: Users },

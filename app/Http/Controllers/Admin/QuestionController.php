@@ -46,6 +46,66 @@ class QuestionController extends Controller
         ]);
     }
 
+    public function printable(Request $request): Response
+    {
+        $module = in_array($request->query('module'), ['digital_literacy', 'data_security', 'all'], true)
+            ? $request->query('module')
+            : 'all';
+        $pillar = in_array($request->query('pillar'), ['digital_skill', 'digital_ethics', 'digital_safety', 'digital_culture'], true)
+            ? $request->query('pillar')
+            : null;
+        $versionId = $request->integer('version_id') ?: null;
+        $version = $versionId
+            ? QuestionnaireVersion::find($versionId)
+            : QuestionnaireVersion::active();
+
+        $questions = Question::with([
+                'questionnaireVersion',
+                'responseScale',
+                'answerOptions' => fn ($query) => $query->where('is_active', true)->orderBy('display_order'),
+            ])
+            ->where('is_active', true)
+            ->when($version?->id, fn ($query) => $query->where('questionnaire_version_id', $version->id))
+            ->when($module !== 'all', fn ($query) => $query->where('module', $module))
+            ->when($pillar, fn ($query) => $query->where('kominfo_pillar', $pillar))
+            ->orderByRaw("CASE module WHEN 'digital_literacy' THEN 0 WHEN 'data_security' THEN 1 ELSE 2 END")
+            ->orderByRaw("CASE kominfo_pillar WHEN 'digital_skill' THEN 0 WHEN 'digital_ethics' THEN 1 WHEN 'digital_culture' THEN 2 WHEN 'digital_safety' THEN 3 ELSE 4 END")
+            ->orderBy('display_order')
+            ->orderBy('id')
+            ->get()
+            ->map(fn (Question $question) => [
+                'id' => $question->id,
+                'module' => $question->module,
+                'module_label' => $this->moduleLabel($question->module),
+                'kominfo_pillar' => $question->kominfo_pillar,
+                'pillar_label' => $this->pillarLabel($question->kominfo_pillar),
+                'text_id' => $question->text_id,
+                'text_en' => $question->text_en,
+                'display_order' => $question->display_order,
+                'question_type' => $question->question_type,
+                'response_scale' => $question->responseScale?->name_id,
+                'answer_options' => $question->answerOptions->map(fn ($option) => [
+                    'id' => $option->id,
+                    'label_id' => $option->label_id,
+                    'label_en' => $option->label_en,
+                    'display_order' => $option->display_order,
+                ])->values(),
+            ])
+            ->values();
+
+        return Inertia::render('Admin/Questions/Print', [
+            'questions' => $questions,
+            'version' => $version ? $version->only(['id', 'name', 'code', 'status']) : null,
+            'filters' => [
+                'module' => $module,
+                'pillar' => $pillar,
+                'version_id' => $version?->id,
+            ],
+            'printedAt' => now()->format('d M Y H:i'),
+            'sourceNote' => 'Instrumen adaptasi berbasis Indeks Literasi Digital Indonesia 2022 dan dipetakan menggunakan UNESCO Digital Literacy Global Framework.',
+        ]);
+    }
+
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
@@ -220,5 +280,25 @@ class QuestionController extends Controller
     private function defaultPillar(string $module): string
     {
         return $module === 'data_security' ? 'digital_safety' : 'digital_skill';
+    }
+
+    private function moduleLabel(?string $module): string
+    {
+        return match ($module) {
+            'digital_literacy' => 'Literasi Digital',
+            'data_security' => 'Keamanan Digital',
+            default => '-',
+        };
+    }
+
+    private function pillarLabel(?string $pillar): string
+    {
+        return match ($pillar) {
+            'digital_skill' => 'Digital Skill',
+            'digital_ethics' => 'Digital Ethics',
+            'digital_safety' => 'Digital Safety',
+            'digital_culture' => 'Digital Culture',
+            default => '-',
+        };
     }
 }

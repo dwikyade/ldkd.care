@@ -25,17 +25,22 @@ class ParticipantController extends Controller
             ? $request->query('lang')
             : 'id';
 
-        $activity = Activity::where('is_active', true)
+        $activities = Activity::where('is_active', true)
             ->whereDate('start_date', '<=', today())
             ->whereDate('end_date', '>=', today())
             ->latest('start_date')
-            ->first();
+            ->get(['id', 'name', 'theme', 'start_date', 'end_date']);
+
+        $activity = $request->query('activity_id')
+            ? $activities->firstWhere('id', (int) $request->query('activity_id'))
+            : $activities->first();
 
         return Inertia::render('Participant/Identify', [
             'mode' => $request->query('mode', 'pre_test'),
             'role' => $request->query('role', 'student'),
             'language' => $language,
             'activity' => $activity,
+            'activities' => $activities,
             'schools' => School::with(['classes' => fn ($query) => $query->where('is_active', true)->orderBy('name')])
                 ->where('is_active', true)
                 ->orderBy('name')
